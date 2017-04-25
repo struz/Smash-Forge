@@ -394,6 +394,14 @@ namespace Smash_Forge
             //    d.seek(d.pos() - 2);
 
             List<int> t1 = new List<int>();
+
+            // Add a "null" padding entry so that everything lines up, otherwise
+            // the hitboxes requested by animations differ from what we track here.
+            // I need to dig into IDA to confirm this, but I suspect the game adds
+            // something like this itself, for whatever reason, or maybe the first
+            // index is reserved for the length of the list for some archaic reason.
+            t1.Add(0);
+
             for (int i = 0; i < table1; i++)
                 t1.Add(d.readShort());
 
@@ -402,6 +410,12 @@ namespace Smash_Forge
 
             if (tableSize != 1)
             {
+                // mwhit
+                // TODO: make sure that this logic has the padding specified above,
+                // and fix the way it'll break other parts of the code including the bit masks
+                // that I put in place.
+                // however, before doing this make sure it's actually required. take a dig
+                // into IDA.
                 List<int> t2 = new List<int>();
                 for (int i = 0; i < table2; i++)
                     t2.Add(d.readShort());
@@ -449,7 +463,15 @@ namespace Smash_Forge
                     {
                         if(jointTable[i][j] == vbnIndex)
                         {
-                            index = j + (i << 8);
+                            //index = j + (i << 8);
+                            if (i > 0)
+                            {
+                                // this mask just seemed to be on every high order bone I found
+                                // although it's probably more complex than this
+                                // the same pattern was found on Link, Lucina, Shulk for their
+                                // sword bones
+                                index = j | 0x3E8;
+                            }
                         }
                     }
                 }

@@ -1589,8 +1589,11 @@ main()
                     if (bid >= 256)
                     {
                         // This is probably wrong, but it's better than nothing right now
-                        bid >>= 8;  // this will find the right offset in the joints table for swords and such
-                        gr++; // different joint
+                        // we need to truncate the number to the least significant 3 bits
+                        // this will overflow for some characters (notably Ike) and so we
+                        // wrap around to 0 further down in that case.
+                        bid &= 0x07;
+                        gr++; // different joint section
                         //while (bid >= 1000)
                         //{
                         //    bid -= 1000;
@@ -1614,6 +1617,8 @@ main()
                                     b = m.vbn.bones[bid];
                                 else
                                 {
+                                    if (bid > m.vbn.jointTable[gr].Count)
+                                        bid = 0;
                                     b = m.vbn.bones[m.vbn.jointTable[gr][bid]];
                                 }
                             }
@@ -1706,6 +1711,10 @@ main()
                             h.Type = Hitbox.HITBOX;
                             // mwhit: cmd.Parameters[2] is Bone_ID
                             // Subtract 1 why? I have removed this for the time being
+                            // TODO: find out why subtracting one works for some hitboxes and NOT others
+                            // it can't be a parsing error because Shulk has half his moves working with one
+                            // and half with the other
+                            // subtracting 1 doesn't work because it's different for low order joints vs higher order joints
                             //h.Bone = ((int)cmd.Parameters[2] - 1).Clamp(0, int.MaxValue);
                             h.Bone = ((int)cmd.Parameters[2]).Clamp(0, int.MaxValue);
                             h.Damage = (float)cmd.Parameters[3];
@@ -1728,9 +1737,8 @@ main()
                                 Hitboxes.Remove(id);
                             h.Type = Hitbox.HITBOX;
                             h.Extended = true;
-                            // mwhit: same deal as above in hitbox
                             //h.Bone = ((int)cmd.Parameters[2] - 1).Clamp(0, int.MaxValue);
-                            h.Bone = ((int)cmd.Parameters[2] - 1).Clamp(0, int.MaxValue);
+                            h.Bone = ((int)cmd.Parameters[2]).Clamp(0, int.MaxValue);
                             h.Damage = (float)cmd.Parameters[3];
                             h.Angle = (int)cmd.Parameters[4];
                             h.KnockbackGrowth = (int)cmd.Parameters[5];
@@ -1753,7 +1761,8 @@ main()
                             if (Hitboxes.ContainsKey(id))
                                 Hitboxes.Remove(id);
                             h.Type = Hitbox.HITBOX;
-                            h.Bone = ((int)cmd.Parameters[2] - 1).Clamp(0, int.MaxValue);
+                            //h.Bone = ((int)cmd.Parameters[2] - 1).Clamp(0, int.MaxValue);
+                            h.Bone = ((int)cmd.Parameters[2]).Clamp(0, int.MaxValue);
                             h.Damage = (float)cmd.Parameters[3];
                             h.Angle = (int)cmd.Parameters[4];
                             h.KnockbackGrowth = (int)cmd.Parameters[5];
@@ -1774,7 +1783,8 @@ main()
                                 Hitboxes.Remove(id);
                             h.Type = Hitbox.HITBOX;
                             h.Extended = true;
-                            h.Bone = ((int)cmd.Parameters[2] - 1).Clamp(0, int.MaxValue);
+                            //h.Bone = ((int)cmd.Parameters[2] - 1).Clamp(0, int.MaxValue);
+                            h.Bone = ((int)cmd.Parameters[2]).Clamp(0, int.MaxValue);
                             h.Damage = (float)cmd.Parameters[3];
                             h.Angle = (int)cmd.Parameters[4];
                             h.KnockbackGrowth = (int)cmd.Parameters[5];

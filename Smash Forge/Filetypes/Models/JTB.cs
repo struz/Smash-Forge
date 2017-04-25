@@ -24,6 +24,10 @@ namespace Smash_Forge
 
         public override void Read(string filename)
         {
+            // mwhit
+            // TODO: remove, unused code, or use in favour of stuff in VBN.cs
+            // at line ~396.
+            Table1.Add((short)0);
             using (var stream = File.Open(filename, FileMode.Open))
             {
                 using (var reader = new BinaryReader(stream))

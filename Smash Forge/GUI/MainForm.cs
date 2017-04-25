@@ -694,11 +694,12 @@ namespace Smash_Forge
 
                     // mwhit: extract this into a function since it works
                     // if this isn't run then we don't refresh the bone tree on character import
+                    // TODO: find out why two models are loaded when I load a character though
                     if (Runtime.TargetVBN != null)
                     {
-                        ModelContainer m = new ModelContainer();
-                        m.vbn = Runtime.TargetVBN;
-                        Runtime.ModelContainers.Add(m);
+                        //ModelContainer m = new ModelContainer();
+                        //m.vbn = Runtime.TargetVBN;
+                        //Runtime.ModelContainers.Add(m);
 
                         boneTreePanel.treeRefresh();
                     }
