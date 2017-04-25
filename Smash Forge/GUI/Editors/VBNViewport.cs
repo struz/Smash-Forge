@@ -1586,12 +1586,12 @@ main()
 
                     int bid = h.Bone;
                     int gr = 0;
-                    if (bid >= 256)
+                    if (bid > 0x3E7)
                     {
-                        // This is probably wrong, but it's better than nothing right now
-                        // we need to truncate the number to the least significant 3 bits
-                        // this will overflow for some characters (notably Ike) and so we
-                        // wrap around to 0 further down in that case.
+                        // We start getting into the range used for other joint sections.
+                        // The way I've done this is probably wrong, but it's better than nothing
+                        // right now. We need to truncate the number to the least significant 3 bits
+                        // to allow indexing into the next joint section.
                         bid &= 0x07;
                         gr++; // different joint section
                         //while (bid >= 1000)
@@ -1617,8 +1617,6 @@ main()
                                     b = m.vbn.bones[bid];
                                 else
                                 {
-                                    if (bid > m.vbn.jointTable[gr].Count)
-                                        bid = 0;
                                     b = m.vbn.bones[m.vbn.jointTable[gr][bid]];
                                 }
                             }
