@@ -189,6 +189,11 @@ namespace Smash_Forge
                 Runtime.TargetVBN.bones.Add((Bone)item);
         }
 
+        /// <summary>
+        /// Depth first search the tree for a particular bone.
+        /// </summary>
+        /// <param name="bone"></param>
+        /// <param name="t"></param>
         private void selectBone(object bone, TreeNode t)
         {
             if (t.Tag == bone)

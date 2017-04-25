@@ -1559,6 +1559,9 @@ main()
             }
         }
 
+        /// <summary>
+        /// Draw the hitboxes parsed in processFrame() to the viewport.
+        /// </summary>
         public void RenderHitboxes()
         {
             if (Hitboxes.Count > 0)
@@ -1574,17 +1577,20 @@ main()
 
                     int bid = h.Bone;
                     int gr = 0;
-                    if (bid > 1000)
+                    if (bid >= 256)
                     {
-                        /*while (bid >= 1000)
-                        {
-                            bid -= 1000;
-                            gr++;
-                        }
-                        gr = gr % 2;
+                        // This is probably wrong, but it's better than nothing right now
+                        bid >>= 8;  // this will find the right offset in the joints table for swords and such
+                        gr++; // different joint
+                        //while (bid >= 1000)
+                        //{
+                        //    bid -= 1000;
+                        //    gr++;
+                        //}
+                        //gr = gr % 2;
                         //bid = bid >> 6;
-                        Console.WriteLine(h.Bone + " " + gr + " " + bid);*/
-                        bid >>= 8;
+                        //Console.WriteLine(h.Bone + " " + gr + " " + bid);
+                        ////bid >>= 8;
                     }
 
                     Bone b = new Bone(null);
@@ -1655,6 +1661,9 @@ main()
         ACMDScript scr_game;
         ACMDScript scr_sound;
 
+        /// <summary>
+        /// Process the current frame of the animation that is running.
+        /// </summary>
         public void ProcessFrame()
         {
             Hitboxes.Clear();
@@ -1686,7 +1695,10 @@ main()
                             if (Hitboxes.ContainsKey(id))
                                 Hitboxes.Remove(id);
                             h.Type = Hitbox.HITBOX;
-                            h.Bone = ((int)cmd.Parameters[2] - 1).Clamp(0, int.MaxValue);
+                            // mwhit: cmd.Parameters[2] is Bone_ID
+                            // Subtract 1 why? I have removed this for the time being
+                            //h.Bone = ((int)cmd.Parameters[2] - 1).Clamp(0, int.MaxValue);
+                            h.Bone = ((int)cmd.Parameters[2]).Clamp(0, int.MaxValue);
                             h.Damage = (float)cmd.Parameters[3];
                             h.Angle = (int)cmd.Parameters[4];
                             h.KnockbackGrowth = (int)cmd.Parameters[5];
@@ -1707,6 +1719,8 @@ main()
                                 Hitboxes.Remove(id);
                             h.Type = Hitbox.HITBOX;
                             h.Extended = true;
+                            // mwhit: same deal as above in hitbox
+                            //h.Bone = ((int)cmd.Parameters[2] - 1).Clamp(0, int.MaxValue);
                             h.Bone = ((int)cmd.Parameters[2] - 1).Clamp(0, int.MaxValue);
                             h.Damage = (float)cmd.Parameters[3];
                             h.Angle = (int)cmd.Parameters[4];

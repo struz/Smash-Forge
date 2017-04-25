@@ -45,6 +45,7 @@ namespace Smash_Forge
         public Bone(VBN v)
         {
             vbnParent = v;
+            Tag = this;
         }
 
         public List<Bone> GetChildren()
@@ -250,8 +251,8 @@ namespace Smash_Forge
             update();
             for (int i = 0; i < bones.Count; i++)
             {
-                try{
-                bones[i].invert = Matrix4.Invert(bones[i].transform);
+                try { // mwhit: what is this?
+                    bones[i].invert = Matrix4.Invert(bones[i].transform);
                 } catch (InvalidOperationException){
                     bones[i].invert = Matrix4.Zero;
                 }

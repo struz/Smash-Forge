@@ -691,6 +691,30 @@ namespace Smash_Forge
                             }
                         }
                     }
+
+                    // mwhit: extract this into a function since it works
+                    // if this isn't run then we don't refresh the bone tree on character import
+                    if (Runtime.TargetVBN != null)
+                    {
+                        ModelContainer m = new ModelContainer();
+                        m.vbn = Runtime.TargetVBN;
+                        Runtime.ModelContainers.Add(m);
+
+                        boneTreePanel.treeRefresh();
+                    }
+                    else
+                    {
+                        foreach (ModelContainer m in Runtime.ModelContainers)
+                        {
+                            if (m.vbn != null)
+                            {
+                                Runtime.TargetVBN = Runtime.ModelContainers[0].vbn;
+                                break;
+                            }
+                        }
+                    }
+
+                    project.fillTree();
                 }
             }
         }

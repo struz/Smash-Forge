@@ -311,7 +311,7 @@ namespace Smash_Forge
                 // Assumes MBN is already loaded for now
                 f.seek(model.verticesTableOffset);
                 List<objDes> objDescriptors = new List<objDes>();
-                Debug.WriteLine(model.name);
+                //Debug.WriteLine(model.name);
                 if (mbn == null)
                 {
                     mbn = new Smash_Forge.MBN();
