@@ -1015,7 +1015,16 @@ main()
             {
                 // Render the hitboxes
                 if (!string.IsNullOrEmpty(Runtime.TargetAnimString))
-                    HandleACMD(Runtime.TargetAnimString.Substring(3));
+                {
+                    List<string> possibleAnimNames = OMO.getPossibleAnimNames(Runtime.TargetAnimString);
+                    foreach (string str in possibleAnimNames)
+                    {
+                        var crc = Crc32.Compute(str.ToLower());
+                        // Only one ACMD can map to a single .omo
+                        if (HandleACMD(crc))
+                            break;
+                    }
+                }
 
                 if (Runtime.renderHitboxes)
                     RenderHitboxes();
@@ -1920,28 +1929,31 @@ main()
             
         }
 
-        public void HandleACMD(string animname)
+        /// <summary>
+        /// Takes a CRC of an anim name and sets up variables to allow
+        /// viewing of the ACMD associated with it.
+        /// </summary>
+        /// <param name="crc"></param>
+        public bool HandleACMD(uint crc)
         {
-            //Console.WriteLine("Handling " + animname);
-            var crc = Crc32.Compute(animname.Replace(".omo", "").ToLower());
-
             if (Runtime.Moveset == null)
             {
                 scr_game = null;
-                return;
+                return false;
             }
 
             if (!Runtime.Moveset.Game.Scripts.ContainsKey(crc))
             {
                 scr_game = null;
-                return;
+                return false;
             }
 
-            //Console.WriteLine("Handling " + animname);
             scr_game = (ACMDScript)Runtime.Moveset.Game.Scripts[crc];
             //scr_sound = (ACMDScript)Runtime.Moveset.Sound.Scripts[crc];
             if (Runtime.acmdEditor.crc != crc)
                 Runtime.acmdEditor.SetAnimation(crc);
+
+            return true;
         }
 
         #endregion

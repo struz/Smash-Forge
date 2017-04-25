@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using OpenTK;
 using System.IO;
+using System.Windows.Forms;
+using System.Text.RegularExpressions;
 
 namespace Smash_Forge
 {
@@ -160,10 +162,10 @@ namespace Smash_Forge
                     if (baseNode[j].r_type == 3)
                     {
                         int v = short.MaxValue;
-                        float i1 = ((float)((short)d.readShort() ) / v);
-                        float i2 = ((float)((short)d.readShort() ) / v);
-                        float i3 = ((float)((short)d.readShort() ) / v);
-                        float i4 = ((float)((short)d.readShort() ) / v);
+                        float i1 = ((float)((short)d.readShort()) / v);
+                        float i2 = ((float)((short)d.readShort()) / v);
+                        float i3 = ((float)((short)d.readShort()) / v);
+                        float i4 = ((float)((short)d.readShort()) / v);
 
                         node.r = new Quaternion(new Vector3(i1, i2, i3), i4);
                         //Console.WriteLine(node.r.ToString());
@@ -219,7 +221,7 @@ namespace Smash_Forge
                     key.addNode(node);
                 }
                 d.seek(off + frameStart);
-                
+
                 anim.addKeyframe(key);
             }
 
@@ -537,6 +539,56 @@ namespace Smash_Forge
         {
             File.WriteAllBytes(fname, createOMO(a, vbn));
         }
+
+        /// <summary>
+        /// Get the longer disambiguated name of a .omo file. Returns null if
+        /// the animation name is not an expected format.
+        /// </summary>
+        public static string getLongAnimName(string animName)
+        {
+            return Regex.Match(animName, @"([A-Z][0-9][0-9])(.*)\.omo").Groups[0].ToString();
+        }
+
+        /// <summary>
+        /// Try some tricks to get a list of possible names for animcmd CRCs
+        /// that might match this animName.
+        /// </summary>
+        /// <param name="animName"></param>
+        /// <returns>A list of strings that can be turned into CRCs
+        /// and subsequently checked for matching animcmd
+        /// files.</returns>
+        public static List<string> getPossibleAnimNames(string animName)
+        {
+            string parsedAnimName = Regex.Match(animName, @"(.)([0-9][0-9])(.*)\.omo").Groups[3].ToString();
+            if (string.IsNullOrEmpty(parsedAnimName))
+                return null;
+
+            List<string> possibleAnimNames = new List<string>();
+
+            possibleAnimNames.Add(parsedAnimName);
+            possibleAnimNames.Add(parsedAnimName + "_C2");
+            possibleAnimNames.Add(parsedAnimName + "_C3");
+            possibleAnimNames.Add(parsedAnimName + "L");
+            possibleAnimNames.Add(parsedAnimName + "R");
+
+            // Fsmash and Ftilt .omo file names just randomly have an S after 
+            // them which is not present in the animcmd file.
+            // E.g. C03AttackS4S is Fsmash, but the acmd is called attacks4
+            if (parsedAnimName.EndsWith("s4s", StringComparison.InvariantCultureIgnoreCase) ||
+                    parsedAnimName.EndsWith("s3s", StringComparison.InvariantCultureIgnoreCase))
+                possibleAnimNames.Add(parsedAnimName.Substring(0, parsedAnimName.Length - 1));
+
+            return possibleAnimNames;
+        }
+    }
+
+    public class AnimTreeNode : TreeNode
+    {
+
+
+        public AnimTreeNode(string rawAnimName, string parsedAnimName)
+        {
+
+        }
     }
 }
-

@@ -982,18 +982,16 @@ namespace Smash_Forge
                     if (pair.Key.EndsWith(".omo"))
                     {
                         var anim = OMO.read(new FileData(pair.Value));
-                        string AnimName = Regex.Match(pair.Key, @"([A-Z][0-9][0-9])(.*)").Groups[0].ToString();
-                        //AnimName = pair.Key;
-                        //AnimName = AnimName.Remove(AnimName.Length - 4);
-                        //AnimName = AnimName.Insert(3, "_");
-                        if (!string.IsNullOrEmpty(AnimName))
+                        string longAnimName = OMO.getLongAnimName(pair.Key);
+
+                        if (!string.IsNullOrEmpty(longAnimName))
                         {
-                            if (Runtime.Animations.ContainsKey(AnimName))
-                                Runtime.Animations[AnimName].children.Add(anim);
+                            if (Runtime.Animations.ContainsKey(longAnimName))
+                                Runtime.Animations[longAnimName].children.Add(anim);
                             else
                             {
-                                animNode.Nodes.Add(AnimName);
-                                Runtime.Animations.Add(AnimName, anim);
+                                animNode.Nodes.Add(longAnimName);
+                                Runtime.Animations.Add(longAnimName, anim);
                             }
                         }
                         else
@@ -1050,8 +1048,7 @@ namespace Smash_Forge
                 }
 
             }
-            //if (Runtime.TargetVBN.bones.Count > 0)
-            //{
+
             if (filename.EndsWith(".omo"))
             {
                 Runtime.Animations.Add(filename, OMO.read(new FileData(filename)));
