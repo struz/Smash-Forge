@@ -1045,6 +1045,7 @@ main()
             }
         }
 
+        List<ModelContainer> ModelsToRender = new List<ModelContainer>();
         private void DrawModels()
         {
             // Bounding Box Render
@@ -1127,7 +1128,16 @@ main()
             Vector3 fresDir = new Vector3(0f, 0f, -1f);// Vector3.Transform(new Vector3(1f, 0f, 0f), fresrot);
             GL.Uniform3(shader.getAttribute("fresLightDir"), Vector3.TransformNormal(fresDir, v.Inverted()).Normalized());*/
 
+            ModelsToRender.Clear();
             foreach (ModelContainer m in Runtime.ModelContainers)
+            {
+                ModelsToRender.Add(m);
+                foreach (Weapon w in m.weapons.Values)
+                    if (w.model != null)
+                        ModelsToRender.Add(w.model);
+            }
+
+            foreach (ModelContainer m in ModelsToRender)
             {
                 if (m.bch != null)
                 {
@@ -1189,7 +1199,7 @@ main()
 
                     if (m.mta != null)
                         m.nud.applyMTA(m.mta, (int)nupdFrame.Value);//Apply base mta
-                    if (Runtime.TargetMTA != null)
+                    if (Runtime.TargetMTA != null) // TODO: make this work with weapon models
                         m.nud.applyMTA(Runtime.TargetMTA, (int)nupdFrame.Value);//Apply additional mta (can override base)
 
                     m.nud.Render(shader);

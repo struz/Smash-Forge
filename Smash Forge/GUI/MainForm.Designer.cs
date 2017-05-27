@@ -76,6 +76,7 @@
             this.texturesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.openNUTEditorToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.open3DSTEXEditorToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.openDATTextureEditorToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.viewToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.viewsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.propertiesWindowToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -100,7 +101,6 @@
             this.glControl1 = new OpenTK.GLControl();
             this.checkBox1 = new System.Windows.Forms.CheckBox();
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
-            this.openDATTextureEditorToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.SuspendLayout();
@@ -458,22 +458,29 @@
             this.open3DSTEXEditorToolStripMenuItem,
             this.openDATTextureEditorToolStripMenuItem});
             this.texturesToolStripMenuItem.Name = "texturesToolStripMenuItem";
-            this.texturesToolStripMenuItem.Size = new System.Drawing.Size(62, 20);
+            this.texturesToolStripMenuItem.Size = new System.Drawing.Size(63, 20);
             this.texturesToolStripMenuItem.Text = "Textures";
             // 
             // openNUTEditorToolStripMenuItem
             // 
             this.openNUTEditorToolStripMenuItem.Name = "openNUTEditorToolStripMenuItem";
-            this.openNUTEditorToolStripMenuItem.Size = new System.Drawing.Size(203, 22);
+            this.openNUTEditorToolStripMenuItem.Size = new System.Drawing.Size(205, 22);
             this.openNUTEditorToolStripMenuItem.Text = "Open NUT Editor";
             this.openNUTEditorToolStripMenuItem.Click += new System.EventHandler(this.openNUTEditorToolStripMenuItem_Click);
             // 
             // open3DSTEXEditorToolStripMenuItem
             // 
             this.open3DSTEXEditorToolStripMenuItem.Name = "open3DSTEXEditorToolStripMenuItem";
-            this.open3DSTEXEditorToolStripMenuItem.Size = new System.Drawing.Size(203, 22);
+            this.open3DSTEXEditorToolStripMenuItem.Size = new System.Drawing.Size(205, 22);
             this.open3DSTEXEditorToolStripMenuItem.Text = "Open 3DS TEX Editor";
             this.open3DSTEXEditorToolStripMenuItem.Click += new System.EventHandler(this.open3DSTEXEditorToolStripMenuItem_Click);
+            // 
+            // openDATTextureEditorToolStripMenuItem
+            // 
+            this.openDATTextureEditorToolStripMenuItem.Name = "openDATTextureEditorToolStripMenuItem";
+            this.openDATTextureEditorToolStripMenuItem.Size = new System.Drawing.Size(205, 22);
+            this.openDATTextureEditorToolStripMenuItem.Text = "Open DAT Texture Editor";
+            this.openDATTextureEditorToolStripMenuItem.Click += new System.EventHandler(this.openDATTextureEditorToolStripMenuItem_Click);
             // 
             // viewToolStripMenuItem
             // 
@@ -681,13 +688,6 @@
             this.pictureBox1.TabIndex = 25;
             this.pictureBox1.TabStop = false;
             this.pictureBox1.Click += new System.EventHandler(this.pictureBox1_Click);
-            // 
-            // openDATTextureEditorToolStripMenuItem
-            // 
-            this.openDATTextureEditorToolStripMenuItem.Name = "openDATTextureEditorToolStripMenuItem";
-            this.openDATTextureEditorToolStripMenuItem.Size = new System.Drawing.Size(203, 22);
-            this.openDATTextureEditorToolStripMenuItem.Text = "Open DAT Texture Editor";
-            this.openDATTextureEditorToolStripMenuItem.Click += new System.EventHandler(this.openDATTextureEditorToolStripMenuItem_Click);
             // 
             // MainForm
             // 

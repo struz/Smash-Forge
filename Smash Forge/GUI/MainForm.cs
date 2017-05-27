@@ -12,6 +12,7 @@ using System.Diagnostics;
 using System.Drawing.Imaging;
 using System.Threading;
 using Microsoft.VisualBasic.Devices;
+using Smash_Forge.GUI.Menus;
 
 namespace Smash_Forge
 {
@@ -293,7 +294,7 @@ namespace Smash_Forge
 
         }
 
-        private void openNud(string filename, string name = "")
+        private ModelContainer openNud(string filename, string name = "")
         {
             string[] files = Directory.GetFiles(System.IO.Path.GetDirectoryName(filename));
 
@@ -391,6 +392,8 @@ namespace Smash_Forge
 
             Runtime.ModelContainers.Add(model);
             meshList.refresh();
+
+            return model;
 
             //ModelViewport viewport = new ModelViewport();
             //viewport.draw.Add(model);
@@ -678,12 +681,13 @@ namespace Smash_Forge
 
                     string[] dirs = Directory.GetDirectories(ofd.SelectedPath);
 
+                    ModelContainer model = null;
                     foreach (string s in dirs)
                     {
                         if (s.EndsWith("model"))
                         {
                             // load default model
-                            openNud(s + "\\body\\c00\\model.nud");
+                            model = openNud(s + "\\body\\c00\\model.nud");
                         }
                         if (s.EndsWith("motion"))
                         {
@@ -699,6 +703,12 @@ namespace Smash_Forge
                                 Runtime.Moveset = new MovesetManager(s + "\\animcmd\\body\\motion.mtable");
                             }
                         }
+                    }
+                    // load sub models / weapons
+                    if (model != null)
+                    {
+                        Weapon.openWeapons(ofd.SelectedPath, model);
+                        meshList.refresh();
                     }
 
                     resyncTargetVBN();
@@ -1941,6 +1951,20 @@ namespace Smash_Forge
                     datToOpen = mc.dat_melee;
             if(datToOpen != null)
                 AddDockedControl(new DatTexEditor(datToOpen));
+        }
+
+        private void meshesToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (nutEditor == null || nutEditor.IsDisposed)
+            {
+                nutEditor = new NUTEditor();
+                nutEditor.Show();
+            }
+            else
+            {
+                nutEditor.BringToFront();
+            }
+            nutEditor.FillForm();
         }
     }
 }

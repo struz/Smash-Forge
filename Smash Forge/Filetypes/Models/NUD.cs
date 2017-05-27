@@ -215,12 +215,14 @@ namespace Smash_Forge
 
             //GL.Enable(EnableCap.PrimitiveRestartFixedIndex);
 
+            // TODO: revisit the .Parent logic changes once we have a sub menu to host all this stuff in
+            // until then we just assume weapon models are checked
             foreach (Polygon p in opaque)
                 if (((Mesh)p.Parent).Checked)
                     DrawPolygon(p, shader);
 
             foreach (Polygon p in trans)
-                if(((Mesh)p.Parent).Checked)
+                if (((Mesh)p.Parent).Checked)
                     DrawPolygon(p, shader);
 
             foreach (Mesh m in mesh)
@@ -460,7 +462,11 @@ namespace Smash_Forge
                     //(p.strip >> 4) == 4 ? PrimitiveType.Triangles : PrimitiveType.TriangleStrip
                     //if (p.IsSelected || p.Parent.IsSelected)
                     //    GL.Uniform4(shader.getAttribute("finalColorGain"), 0.5f, 0.5f, 1.5f, 1f);
-                    
+
+                    // TODO: fix me up after I add GUI controls for weapons
+                    //bool doDraw;
+                    //try { doDraw = (p.IsSelected || p.Parent.IsSelected) && drawSelection; } catch (NullReferenceException) { doDraw = false; }
+                    //if (doDraw)
                     if ((p.IsSelected || p.Parent.IsSelected) && drawSelection)
                     {
                         GL.Disable(EnableCap.DepthTest);

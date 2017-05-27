@@ -35,7 +35,6 @@ namespace Smash_Forge
                     else
                         model = new TreeNode(m.name) { Tag = m.nud };
                     treeView1.Nodes.Add(model);
-                    j++; 
                     foreach (NUD.Mesh mesh in m.nud.mesh)
                     {
                         model.Nodes.Add(mesh);
@@ -49,6 +48,31 @@ namespace Smash_Forge
                         }
                     }
                 }
+                foreach (Weapon weapon in m.weapons.Values)
+                {
+                    if (weapon.model != null && weapon.model.nud != null)
+                    {
+                        TreeNode weaponModel;
+                        if (string.IsNullOrWhiteSpace(m.name))
+                            weaponModel = new TreeNode($"Model {j} Weapon {weapon.weaponName}") { Tag = weapon.model.nud };
+                        else
+                            weaponModel = new TreeNode(m.name + $" Weapon {weapon.weaponName}") { Tag = m.nud };
+                        treeView1.Nodes.Add(weaponModel);
+                        foreach (NUD.Mesh mesh in weapon.model.nud.mesh)
+                        {
+                            weaponModel.Nodes.Add(mesh);
+                            int i = 0;
+                            mesh.Nodes.Clear();
+                            foreach (NUD.Polygon poly in mesh.polygons)
+                            {
+                                mesh.Nodes.Add(poly);
+                                poly.Text = "Polygon_" + i;
+                                i++;
+                            }
+                        }
+                    }
+                }
+                j++;
             }
             //treeView1.ExpandAll();
         }
