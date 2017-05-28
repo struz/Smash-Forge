@@ -30,15 +30,15 @@ namespace Smash_Forge
             {
                 if (e.Node.Parent.Text == "Bone Animations")
                 {
-                    Runtime.TargetAnim = Runtime.Animations[e.Node.Text];
                     Runtime.TargetAnimString = e.Node.Text;
+                    Runtime.TargetAnim = Runtime.Animations[e.Node.Text];
                     //Console.WriteLine("Selected Anim " + e.Node.Text);
                 }
                 else if(e.Node.Parent.Text == "Material Animations")
                 {
+                    Runtime.TargetMTAString = e.Node.Text;
                     MainForm.Instance.viewports[0].loadMTA(Runtime.MaterialAnimations[e.Node.Text]);
                     //Runtime.TargetMTA = ;
-                    Runtime.TargetMTAString = e.Node.Text;
                 }
             }
         }

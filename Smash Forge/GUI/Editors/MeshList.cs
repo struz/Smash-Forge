@@ -31,9 +31,9 @@ namespace Smash_Forge
                 {
                     TreeNode model;
                     if (string.IsNullOrWhiteSpace(m.name))
-                        model = new TreeNode($"Model {j}") { Tag = m.nud };
+                        model = new TreeNode($"Model {j}") { Tag = m, Checked = m.isVisible };
                     else
-                        model = new TreeNode(m.name) { Tag = m.nud };
+                        model = new TreeNode(m.name) { Tag = m, Checked = m.isVisible };
                     treeView1.Nodes.Add(model);
                     foreach (NUD.Mesh mesh in m.nud.mesh)
                     {
@@ -54,9 +54,11 @@ namespace Smash_Forge
                     {
                         TreeNode weaponModel;
                         if (string.IsNullOrWhiteSpace(m.name))
-                            weaponModel = new TreeNode($"Model {j} Weapon {weapon.weaponName}") { Tag = weapon.model.nud };
+                            weaponModel = new TreeNode($"Model {j} Weapon {weapon.weaponName}")
+                                { Tag = weapon.model, Checked = weapon.model.isVisible };
                         else
-                            weaponModel = new TreeNode(m.name + $" Weapon {weapon.weaponName}") { Tag = m.nud };
+                            weaponModel = new TreeNode(m.name + $" Weapon {weapon.weaponName}")
+                                { Tag = weapon.model, Checked = weapon.model.isVisible };
                         treeView1.Nodes.Add(weaponModel);
                         foreach (NUD.Mesh mesh in weapon.model.nud.mesh)
                         {
@@ -79,6 +81,8 @@ namespace Smash_Forge
 
         private void treeView1_AfterCheck(object sender, TreeViewEventArgs e)
         {
+            if (e.Node.Tag != null && e.Node.Tag is ModelContainer)
+                ((ModelContainer)e.Node.Tag).isVisible = e.Node.Checked;
             /*if (e.Node.Tag is NUD.Mesh) {
                 ((NUD.Mesh)e.Node.Tag).isVisible = e.Node.Checked;
                 

@@ -412,13 +412,12 @@ namespace Smash_Forge
         public Dictionary<string, SkelAnimation> animations { get; set; }
 
         // Stuff for rendering
-        public bool isVisible { get; set; }
+        public SkelAnimation targetAnim;
 
         public Weapon(int weaponId, string weaponName)
         {
             this.weaponId = weaponId;
             this.weaponName = weaponName;
-            isVisible = true; // TODO: change me when we have scripting working
 
             model = null;
             moveset = null;

@@ -12,7 +12,6 @@ using System.Diagnostics;
 using System.Drawing.Imaging;
 using System.Threading;
 using Microsoft.VisualBasic.Devices;
-using Smash_Forge.GUI.Menus;
 
 namespace Smash_Forge
 {

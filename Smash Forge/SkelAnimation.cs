@@ -150,14 +150,18 @@ namespace Smash_Forge
                 foreach (ModelContainer con in Runtime.ModelContainers)
                 {
                     if (con.nud != null && con.mta != null)
-                    {
                         con.nud.applyMTA(con.mta, 0);
+                    foreach (Weapon w in con.weapons.Values)
+                    {
+                        if (w.model != null && w.model.nud != null && w.model.mta != null)
+                            con.nud.applyMTA(w.model.mta, 0);
                     }
                 }
             }
 
             if (children.Count > 0) Main = true;
 
+            // TODO: do we need to update this for weapons?
             foreach (object child in children)
             {
                 if(child is SkelAnimation)
@@ -170,9 +174,7 @@ namespace Smash_Forge
                     foreach(ModelContainer con in Runtime.ModelContainers)
                     {
                         if(con.nud != null)
-                        {
                             con.nud.applyMTA(((MTA)child), frame);
-                        }
                     }
                 }
             }

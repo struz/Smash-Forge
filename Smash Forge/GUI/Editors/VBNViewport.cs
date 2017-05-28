@@ -254,6 +254,15 @@ namespace Smash_Forge
                 if (m.vbn != null)
                     Runtime.TargetAnim.nextFrame(m.vbn);
 
+                foreach (Weapon w in m.weapons.Values)
+                {
+                    if (w.targetAnim == null)
+                        continue;
+                    w.targetAnim.setFrame((int)this.nupdFrame.Value);
+                    if (w.model != null && w.model.nud != null)
+                        w.targetAnim.nextFrame(w.model.vbn);
+                }
+
                 if (m.dat_melee != null)
                 {
                     Runtime.TargetAnim.setFrame((int)this.nupdFrame.Value);
@@ -1139,6 +1148,9 @@ main()
 
             foreach (ModelContainer m in ModelsToRender)
             {
+                if (!m.isVisible)
+                    continue;
+
                 if (m.bch != null)
                 {
                     if (m.bch.mbn != null)
@@ -1148,9 +1160,7 @@ main()
                 }
 
                 if (m.dat_melee != null)
-                {
                     m.dat_melee.Render(v);
-                }
 
                 if (m.nud != null)
                 {
@@ -1229,14 +1239,14 @@ main()
                 {
                     RenderTools.DrawVBN(m.vbn);
                     if (m.bch != null)
-                    {
                         RenderTools.DrawVBN(m.bch.models[0].skeleton);
-                    }
 
                     if (m.dat_melee != null)
-                    {
                         RenderTools.DrawVBN(m.dat_melee.bones);
-                    }
+
+                    foreach (Weapon w in m.weapons.Values)
+                        if (w.model != null && w.model.vbn != null && w.model.isVisible)
+                            RenderTools.DrawVBN(w.model.vbn);
                 }
             }
         }
@@ -2170,21 +2180,21 @@ main()
 
         #endregion
 
-        public void SetFrame(int frame)
-        {
-            Runtime.TargetAnim.setFrame(frame);
-            foreach (ModelContainer m in Runtime.ModelContainers)
-            {
-                if (m.vbn != null)
-                    Runtime.TargetAnim.nextFrame(m.vbn);
+        //public void SetFrame(int frame)
+        //{
+        //    Runtime.TargetAnim.setFrame(frame);
+        //    foreach (ModelContainer m in Runtime.ModelContainers)
+        //    {
+        //        if (m.vbn != null)
+        //            Runtime.TargetAnim.nextFrame(m.vbn);
 
-                if (m.dat_melee != null)
-                {
-                    Runtime.TargetAnim.setFrame((int)this.nupdFrame.Value);
-                    Runtime.TargetAnim.nextFrame(m.dat_melee.bones);
-                }
-            }
-        }
+        //        if (m.dat_melee != null)
+        //        {
+        //            Runtime.TargetAnim.setFrame((int)this.nupdFrame.Value);
+        //            Runtime.TargetAnim.nextFrame(m.dat_melee.bones);
+        //        }
+        //    }
+        //}
         public void loadAnimation(SkelAnimation a)
         {
             a.setFrame(0);
@@ -2192,6 +2202,25 @@ main()
             {
                 if (m.vbn != null)
                     Runtime.TargetAnim.nextFrame(m.vbn);
+                foreach (Weapon w in m.weapons.Values)
+                {
+                    // assign target anim to match the Runtime one, if possible.
+                    // we make the assumption that animations named the same have the
+                    // same number of frames.
+                    try
+                    {
+                        w.targetAnim = w.animations[Runtime.TargetAnimString];
+                    }
+                    catch (KeyNotFoundException)
+                    {
+                        w.targetAnim = null;
+                    }
+                    if (w.targetAnim == null)
+                        continue;
+                    w.targetAnim.setFrame(0);
+                    if (w.model != null && w.model.vbn != null)
+                        w.targetAnim.nextFrame(w.model.vbn);
+                }
             }
             nupdMaxFrame.Value = a.size() > 1 ? a.size() - 1 : a.size();
             nupdFrame.Value = 0;

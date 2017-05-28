@@ -24,8 +24,12 @@ namespace Smash_Forge
         public static Dictionary<string, SkelAnimation> Animations { get; set; }
         public static MovesetManager Moveset { get; set; }
 
+        // For rendering / mesh list refreshing
+        public bool isVisible;
+
         public ModelContainer()
         {
+            isVisible = true;
             weapons = new SortedList<int, Weapon>();
         }
 
