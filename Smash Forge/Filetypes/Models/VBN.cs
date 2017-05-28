@@ -260,9 +260,12 @@ namespace Smash_Forge
             update();
             for (int i = 0; i < bones.Count; i++)
             {
-                try{
-                bones[i].invert = Matrix4.Invert(bones[i].transform);
-                } catch (InvalidOperationException){
+                try
+                {
+                    bones[i].invert = Matrix4.Invert(bones[i].transform);
+                }
+                catch (InvalidOperationException)
+                {
                     bones[i].invert = Matrix4.Zero;
                 }
             }

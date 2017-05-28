@@ -145,7 +145,10 @@ namespace Smash_Forge
             
             if (frame == 0 && Main)
             {
-                vbn.reset();
+                // TODO: fix root cause of this function. Commenting it out seems fine too?
+                // When called, it was causing a piece of ZSS' gun to hover, and removing
+                // it fixed it without other ill effects.
+                // vbn.reset();
 
                 foreach (ModelContainer con in Runtime.ModelContainers)
                 {
@@ -154,7 +157,7 @@ namespace Smash_Forge
                     foreach (Weapon w in con.weapons.Values)
                     {
                         if (w.model != null && w.model.nud != null && w.model.mta != null)
-                            con.nud.applyMTA(w.model.mta, 0);
+                            w.model.nud.applyMTA(w.model.mta, 0);
                     }
                 }
             }
