@@ -54,10 +54,10 @@ namespace Smash_Forge
                     {
                         TreeNode weaponModel;
                         if (string.IsNullOrWhiteSpace(m.name))
-                            weaponModel = new TreeNode($"Model {j} Weapon {weapon.weaponName}")
+                            weaponModel = new TreeNode($"Model {j} Weapon {weapon.weaponId} {weapon.weaponName}")
                                 { Tag = weapon.model, Checked = weapon.model.isVisible };
                         else
-                            weaponModel = new TreeNode(m.name + $" Weapon {weapon.weaponName}")
+                            weaponModel = new TreeNode(m.name + $" Weapon {weapon.weaponId} {weapon.weaponName}")
                                 { Tag = weapon.model, Checked = weapon.model.isVisible };
                         treeView1.Nodes.Add(weaponModel);
                         foreach (NUD.Mesh mesh in weapon.model.nud.mesh)

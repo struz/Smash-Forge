@@ -23,6 +23,10 @@ namespace Smash_Forge
         public Quaternion rot = Quaternion.FromMatrix(Matrix3.Zero);
         public Matrix4 transform, invert;
 
+        // Used for weapons so that they can appear in the right place
+        // without altering the parent model bone tree
+        public Bone inheritFrom = null;
+
         public int parentIndex
         {
             set
@@ -242,8 +246,16 @@ namespace Smash_Forge
         {
             for (int i = 0; i < bones.Count; i++)
             {
-                bones[i].transform = Matrix4.CreateScale(bones[i].sca) * Matrix4.CreateFromQuaternion(bones[i].rot) * Matrix4.CreateTranslation(bones[i].pos);
-                if (bones[i].Parent !=null)
+                Bone boneData = bones[i].inheritFrom != null ? bones[i].inheritFrom : bones[i];
+                bones[i].transform = Matrix4.CreateScale(boneData.sca) * Matrix4.CreateFromQuaternion(boneData.rot) * Matrix4.CreateTranslation(boneData.pos);
+                if (bones[i].inheritFrom != null)
+                {
+                    // base node of a weapon, use inheritFrom bone instead of parent bone
+                    // TODO: make sure this ordering is always right, i.e. weapons are always
+                    // transformed after the main model
+                    bones[i].transform = bones[i].transform * ((Bone)bones[i].inheritFrom.Parent).transform;
+                }
+                else if (bones[i].Parent != null)
                 {
                     bones[i].transform = bones[i].transform * bones[(int)bones[i].parentIndex].transform;
                 }

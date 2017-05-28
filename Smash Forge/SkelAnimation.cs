@@ -148,6 +148,7 @@ namespace Smash_Forge
                 // TODO: fix root cause of this function. Commenting it out seems fine too?
                 // When called, it was causing a piece of ZSS' gun to hover, and removing
                 // it fixed it without other ill effects.
+                // Possibly because a reset() includes an update(), then we update later on in this function?
                 // vbn.reset();
 
                 foreach (ModelContainer con in Runtime.ModelContainers)
@@ -164,7 +165,7 @@ namespace Smash_Forge
 
             if (children.Count > 0) Main = true;
 
-            // TODO: do we need to update this for weapons?
+            // TODO: do we need to update this for weapons? Do weapons have children?
             foreach (object child in children)
             {
                 if(child is SkelAnimation)

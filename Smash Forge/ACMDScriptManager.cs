@@ -405,7 +405,8 @@ namespace Smash_Forge
         // TODO: actually drawing weapons
         public int weaponId { get; set; }
         public string weaponName { get; set; }
-
+        
+        public ModelContainer parentModel { get; set; }
         public ModelContainer model { get; set; }
         public MovesetManager moveset { get; set; }
         public Dictionary<string, MTA> materialAnimations { get; set; }
@@ -414,10 +415,11 @@ namespace Smash_Forge
         // Stuff for rendering
         public SkelAnimation targetAnim;
 
-        public Weapon(int weaponId, string weaponName)
+        public Weapon(int weaponId, string weaponName, ModelContainer parentModel)
         {
             this.weaponId = weaponId;
             this.weaponName = weaponName;
+            this.parentModel = parentModel;
 
             model = null;
             moveset = null;
@@ -587,7 +589,7 @@ namespace Smash_Forge
             }
         }
 
-        public void makeWeaponModel(int weaponId, string weaponName, string weaponModelDir)
+        public void makeWeaponModel(string weaponName, string weaponModelDir)
         {
             string[] files = null;
             try
@@ -633,11 +635,25 @@ namespace Smash_Forge
             if (!pvbn.Equals(""))
             {
                 weaponModel.vbn = new VBN(pvbn);
-                //Runtime.TargetVBN = weapon.vbn;
                 if (!pjtb.Equals(""))
                     weaponModel.vbn.readJointTable(pjtb);
                 if (!psb.Equals(""))
                     weaponModel.vbn.swingBones.Read(psb);
+
+                // Sync VBN to parent model by substituting some nodes
+                // TODO: this doesn't work unless the animation names match between model
+                // and weapon at the moment. Breaks on Link's grab, for example
+                Bone syncBone = null;
+                foreach (Bone b in parentModel.vbn.bones)
+                    if (b.Text == "RHaveN" || b.Text == "HaveN")
+                    {
+                        // Not sure how to tell which characters are left handed or not, if any :\
+                        syncBone = b;
+                        break;
+                    }
+
+                if (syncBone != null)
+                    weaponModel.vbn.bones[0].inheritFrom = syncBone;
             }
 
             if (!pnut.Equals(""))
@@ -719,10 +735,10 @@ namespace Smash_Forge
                 int weaponId = kvp.Key;
                 string weaponName = kvp.Value;
 
-                Weapon weapon = new Weapon(weaponId, weaponName);
+                Weapon weapon = new Weapon(weaponId, weaponName, parentModel);
 
                 string weaponModelDir = characterBaseDir + "\\model\\" + weaponName + "\\c00\\";
-                weapon.makeWeaponModel(weaponId, weaponName, weaponModelDir);
+                weapon.makeWeaponModel(weaponName, weaponModelDir);
 
                 string weaponAnimDir = characterBaseDir + "\\motion\\" + weaponName + "\\";
                 weapon.openWeaponAnimations(weaponAnimDir);
