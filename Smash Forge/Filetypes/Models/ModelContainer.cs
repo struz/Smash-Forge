@@ -19,7 +19,7 @@ namespace Smash_Forge
         // in the GUI but it will be used when necessary.
         // TODO: I think it's worth making a new ACMDWeapon class and attaching all the stuff to that
         // that way we can track weapon name, weapon id, weapon scripts, etc.
-        public SortedList<int, Weapon> weapons;
+        public List<Weapon> weapons;
 
         public static Dictionary<string, SkelAnimation> Animations { get; set; }
         public static MovesetManager Moveset { get; set; }
@@ -30,7 +30,7 @@ namespace Smash_Forge
         public ModelContainer()
         {
             isVisible = true;
-            weapons = new SortedList<int, Weapon>();
+            weapons = new List<Weapon>();
         }
 
         /*

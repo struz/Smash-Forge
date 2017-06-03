@@ -215,8 +215,6 @@ namespace Smash_Forge
 
             //GL.Enable(EnableCap.PrimitiveRestartFixedIndex);
 
-            // TODO: revisit the .Parent logic changes once we have a sub menu to host all this stuff in
-            // until then we just assume weapon models are checked
             foreach (Polygon p in opaque)
                 if (((Mesh)p.Parent).Checked)
                     DrawPolygon(p, shader);

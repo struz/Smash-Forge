@@ -48,16 +48,16 @@ namespace Smash_Forge
                         }
                     }
                 }
-                foreach (Weapon weapon in m.weapons.Values)
+                foreach (Weapon weapon in m.weapons)
                 {
                     if (weapon.model != null && weapon.model.nud != null)
                     {
                         TreeNode weaponModel;
                         if (string.IsNullOrWhiteSpace(m.name))
-                            weaponModel = new TreeNode($"Model {j} Weapon {weapon.weaponId} {weapon.weaponName}")
+                            weaponModel = new TreeNode($"Model {j} Weapon {weapon.characterWeaponId} {weapon.weaponName}")
                                 { Tag = weapon.model, Checked = weapon.model.isVisible };
                         else
-                            weaponModel = new TreeNode(m.name + $" Weapon {weapon.weaponId} {weapon.weaponName}")
+                            weaponModel = new TreeNode(m.name + $" Weapon {weapon.characterWeaponId} {weapon.weaponName}")
                                 { Tag = weapon.model, Checked = weapon.model.isVisible };
                         treeView1.Nodes.Add(weaponModel);
                         foreach (NUD.Mesh mesh in weapon.model.nud.mesh)

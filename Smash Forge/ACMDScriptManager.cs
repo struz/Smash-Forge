@@ -400,10 +400,9 @@ namespace Smash_Forge
 
     public class Weapon
     {
-        // TODO: parsing weapon scripts in tandem with regular scripts
-        // TODO: visualizing / GUI for weapon data
-        // TODO: actually drawing weapons
+        // TODO: parsing & processing weapon ACMD scripts in tandem with regular ACMD scripts
         public int weaponId { get; set; }
+        public int characterWeaponId { get; set; }  // ID when making using Spawn_Article()
         public string weaponName { get; set; }
         
         public ModelContainer parentModel { get; set; }
@@ -415,9 +414,10 @@ namespace Smash_Forge
         // Stuff for rendering
         public SkelAnimation targetAnim;
 
-        public Weapon(int weaponId, string weaponName, ModelContainer parentModel)
+        public Weapon(int weaponId, int characterWeaponId, string weaponName, ModelContainer parentModel)
         {
             this.weaponId = weaponId;
+            this.characterWeaponId = characterWeaponId;
             this.weaponName = weaponName;
             this.parentModel = parentModel;
 
@@ -429,21 +429,17 @@ namespace Smash_Forge
 
         //Runtime.Moveset.Game.Scripts[crc]
 
-        // Returns a list mapping weapon_id for a character to the weapon name
-        public static SortedList<int, string> getCharacterWeapons(string characterName)
+        // Returns a list mapping weapon_id for a character to the weapon name, in the
+        // order that the weapons are referred to in ACMD scripts
+        public static List<KeyValuePair<int, string>> getCharacterWeapons(string characterName)
         {
+            List<KeyValuePair<int, string>> characterWeapons = new List<KeyValuePair<int, string>>();
             string characterNameLower = characterName.ToLower();
-            List<int> characterWeaponIndexes = new List<int>();
-            for (int i = 0; i < WEAPON_CHARACTER.Length; i++)
+            int[] characterWeaponIndexes = FIGHTER_WEAPON_ORDER[characterName];
+            foreach (int weapon_id in characterWeaponIndexes)
             {
-                if (WEAPON_CHARACTER[i] == characterNameLower)
-                    characterWeaponIndexes.Add(i);
+                characterWeapons.Add(new KeyValuePair<int, string>(weapon_id, WEAPON[weapon_id]));
             }
-
-            SortedList<int, string> characterWeapons = new SortedList<int, string>();
-            // j starts at 1 because ACMD is 1 indexed on weapons
-            for (int i = 0, j = 1; i < characterWeaponIndexes.Count; i++, j++)
-                characterWeapons.Add(j, WEAPON[characterWeaponIndexes[i]]);
             return characterWeapons;
         }
 
@@ -728,14 +724,15 @@ namespace Smash_Forge
             // character in question, e.g. "szerosuit" for ZSS.
             string[] splitDir = characterBaseDir.Split('\\');
             string characterName = splitDir[splitDir.Length - 1];
-            SortedList<int, string> characterWeapons = Weapon.getCharacterWeapons(characterName);
+            List<KeyValuePair<int, string>> characterWeapons = Weapon.getCharacterWeapons(characterName);
 
+            int characterWeaponId = 0;
             foreach (KeyValuePair<int, string> kvp in characterWeapons)
             {
                 int weaponId = kvp.Key;
                 string weaponName = kvp.Value;
 
-                Weapon weapon = new Weapon(weaponId, weaponName, parentModel);
+                Weapon weapon = new Weapon(weaponId, characterWeaponId, weaponName, parentModel);
 
                 string weaponModelDir = characterBaseDir + "\\model\\" + weaponName + "\\c00\\";
                 weapon.makeWeaponModel(weaponName, weaponModelDir);
@@ -746,7 +743,8 @@ namespace Smash_Forge
                 string weaponScriptDir = characterBaseDir + "\\script\\animcmd\\weapon\\" + weaponName + "\\";
                 weapon.openWeaponScript(weaponScriptDir);
 
-                parentModel.weapons.Add(weaponId, weapon);
+                parentModel.weapons.Add(weapon);
+                characterWeaponId++;
             }
         }
 
@@ -1001,6 +999,146 @@ namespace Smash_Forge
             "fighter", "fighter", "fighter", "fighter", "fighter",
             "fighter", "fighter", "fighter", "fighter", "fighter",
             "fighter", "fighter", "fighter", "fighter"
+        };
+
+        public static Dictionary<string, int> FIGHTER_ID = new Dictionary<string, int>
+        {
+            {"miifighter", 0},
+            {"miiswordsman", 1},
+            {"miigunner", 2},
+            {"mario", 3},
+            {"donkey", 4},
+            {"link", 5},
+            {"samus", 6},
+            {"yoshi", 7},
+            {"kirby", 8},
+            {"fox", 9},
+            {"pikachu", 10},
+            {"luigi", 11},
+            {"captain", 12},
+            {"ness", 13},
+            {"peach", 14},
+            {"koopa", 15},
+            {"zelda", 16},
+            {"sheik", 17},
+            {"marth", 18},
+            {"gamewatch", 19},
+            {"ganon", 20},
+            {"falco", 21},
+            {"wario", 22},
+            {"metaknight", 23},
+            {"pit", 24},
+            {"szerosuit", 25},
+            {"pikmin", 26},
+            {"diddy", 27},
+            {"dedede", 28},
+            {"ike", 29},
+            {"lucario", 30},
+            {"robot", 31},
+            {"toonlink", 32},
+            {"lizardon", 33},
+            {"sonic", 34},
+            {"purin", 35},
+            {"mariod", 36},
+            {"lucina", 37},
+            {"pitb", 38},
+            {"rosetta", 39},
+            {"wiifit", 40},
+            {"littlemac", 41},
+            {"murabito", 42},
+            {"palutena", 43},
+            {"reflet", 44},
+            {"duckhunt", 45},
+            {"koopajr", 46},
+            {"shulk", 47},
+            {"gekkouga", 48},
+            {"pacman", 49},
+            {"rockman", 50},
+            {"mewtwo", 51},
+            {"ryu", 52},
+            {"lucas", 53},
+            {"roy", 54},
+            {"cloud", 55},
+            {"bayonetta", 56},
+            {"kamui", 57},
+            {"koopag", 58},
+            {"warioman", 59},
+            {"littlemacg", 60},
+            {"lucariom", 61},
+            {"miienemyf", 62},
+            {"miienemys", 63},
+            {"miienemyg", 64},
+        };
+
+        // Mapping between fighter name and their weapon order for Spawn_Article() ACMD commands
+        // It also just happens to be declared in ascending fighter ID order
+        public static Dictionary<string, int[]> FIGHTER_WEAPON_ORDER = new Dictionary<string, int[]>
+        {
+            {"miifighter", new int[] {0x117, 0x118}},
+            {"miiswordsman", new int[] {0x119, 0x11b, 0x11a, 0x11c}},
+            {"miigunner", new int[] {0x11d, 0x128, 0x11e, 0x11f, 0x120, 0x121, 0x122, 0x123, 0x124, 0x125, 0x126, 0x127}},
+            {"mario", new int[] {0x0, 0x1, 0x2, 0x3, 0x5}},
+            {"donkey", new int[] {0xf2, 0xf4}},
+            {"link", new int[] {0x7, 0x8, 0x6, 0x5b, 0x5c, 0x5d, 0x5e, 0xd5}},
+            {"samus", new int[] {0x46, 0x47, 0x48, 0x4b, 0x4c, 0x63, 0x4d, 0x15a}},
+            {"yoshi", new int[] {0x35, 0x36}},
+            {"kirby", new int[] {0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x9, 0xa, 0xb, 0x62, 0xc, 0x11, 0x12, 0xd, 0xe, 0x13, 0xf, 0x164, 0x165}},
+            {"fox", new int[] {0x1a, 0x1b, 0x1c, 0x1d}},
+            {"pikachu", new int[] {0x14, 0x17, 0x16, 0x15, 0x19}},
+            {"luigi", new int[] {0x64, 0x65}},
+            {"captain", new int[] {}},
+            {"ness", new int[] {0x55, 0x56, 0x57, 0x59, 0x5a}},
+            {"peach", new int[] {0x50, 0x51}},
+            {"koopa", new int[] {0x5f}},
+            {"zelda", new int[] {0x22, 0x23, 0x26, 0x24, 0x25}},
+            {"sheik", new int[] {0x41, 0x42, 0x43, 0x44, 0x45}},
+            {"marth", new int[] {}},
+            {"gamewatch", new int[] {0xe5, 0xe6, 0xe7, 0xe8, 0xe9, 0xeb, 0xec}},
+            {"ganon", new int[] {0x60}},
+            {"falco", new int[] {0x1e, 0x1f, 0x20, 0x21}},
+            {"wario", new int[] {0xcc, 0xcd}},
+            {"metaknight", new int[] {0xe4}},
+            {"pit", new int[] {0x4e, 0x4f}},
+            {"szerosuit", new int[] {0x52, 0x37, 0x38}},
+            {"pikmin", new int[] {0x3c, 0x3e, 0x3f, 0x40}},
+            {"diddy", new int[] {0x2f, 0x30, 0x33}},
+            {"dedede", new int[] {0x27, 0x28, 0x29, 0x2a, 0x2b, 0x2c, 0x2d, 0x2e}},
+            {"ike", new int[] {0x34}},
+            {"lucario", new int[] {0x53, 0x54}},
+            {"robot", new int[] {0xc5, 0xc6, 0xc7, 0xc8}},
+            {"toonlink", new int[] {0xcf, 0xd0, 0xce, 0xd1, 0xd2, 0xd3, 0xd4, 0xd6, 0xd7, 0xd8}},
+            {"lizardon", new int[] {0xdd, 0xde, 0xdf, 0xe0, 0xe1}},
+            {"sonic", new int[] {0xbb, 0xbd}},
+            {"purin", new int[] {0xe2, 0xe3}},
+            {"mariod", new int[] {0xbe, 0xc2, 0xbf, 0xc0}},
+            {"lucina", new int[] {0x104}},
+            {"pitb", new int[] {0x15d, 0x15e}},
+            {"rosetta", new int[] {0x9a, 0x9b, 0x9d, 0x9c}},
+            {"wiifit", new int[] {0x73, 0x74, 0x75, 0x76, 0x77}},
+            {"littlemac", new int[] {0x7e, 0x7f, 0x80, 0x81}},
+            {"murabito", new int[] {0x82, 0x83, 0x84, 0x85, 0x86, 0x87, 0x88, 0x8a, 0x8b, 0x8c, 0x8d, 0x8e, 0x8f, 0x90, 0x91, 0x89, 0x98, 0x96}},
+            {"palutena", new int[] {0xa0, 0xa1, 0xa2, 0xa3, 0xa4, 0xa5, 0xa6, 0xa9}},
+            {"reflet", new int[] {0xb4, 0xb5, 0xb6, 0xb7, 0xb8}},
+            {"duckhunt", new int[] {0x108, 0x10d, 0x109, 0x10a, 0x10b, 0x10c, 0x116}},
+            {"koopajr", new int[] {0x131, 0x132, 0x133, 0x134, 0x135, 0x136}},
+            {"shulk", new int[] {}},
+            {"gekkouga", new int[] {0xf9, 0xfa, 0xfd}},
+            {"pacman", new int[] {0x12b, 0x12c, 0x12d, 0x12e, 0x12f, 0x130}},
+            {"rockman", new int[] {0x67, 0x68, 0x69, 0x6a, 0x6b, 0x6c, 0x7c, 0x7d, 0x99}},
+            {"mewtwo", new int[] {0x166, 0x167}},
+            {"ryu", new int[] {0x16b, 0x16d}},
+            {"lucas", new int[] {0x16e, 0x16f, 0x170, 0x172, 0x173, 0x174, 0x175}},
+            {"roy", new int[] {0x176}},
+            {"cloud", new int[] {0x177}},
+            {"bayonetta", new int[] {0x178, 0x179, 0x17a, 0x17b}},
+            {"kamui", new int[] {0x17f, 0x180, 0x181, 0x182}},
+            {"koopag", new int[] {0x14e}},
+            {"warioman", new int[] {0x157}},
+            {"littlemacg", new int[] {}},
+            {"lucariom", new int[] {0x158, 0x159}},
+            {"miienemyf", new int[] {}},
+            {"miienemys", new int[] {}},
+            {"miienemyg", new int[] {0x14b, 0x14d}},
         };
     }
 }

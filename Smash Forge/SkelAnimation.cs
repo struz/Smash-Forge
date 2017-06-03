@@ -155,7 +155,7 @@ namespace Smash_Forge
                 {
                     if (con.nud != null && con.mta != null)
                         con.nud.applyMTA(con.mta, 0);
-                    foreach (Weapon w in con.weapons.Values)
+                    foreach (Weapon w in con.weapons)
                     {
                         if (w.model != null && w.model.nud != null && w.model.mta != null)
                             w.model.nud.applyMTA(w.model.mta, 0);

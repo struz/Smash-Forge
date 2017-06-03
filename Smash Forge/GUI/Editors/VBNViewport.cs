@@ -254,7 +254,7 @@ namespace Smash_Forge
                 if (m.vbn != null)
                     Runtime.TargetAnim.nextFrame(m.vbn);
 
-                foreach (Weapon w in m.weapons.Values)
+                foreach (Weapon w in m.weapons)
                 {
                     if (w.targetAnim == null)
                         continue;
@@ -1141,7 +1141,7 @@ main()
             foreach (ModelContainer m in Runtime.ModelContainers)
             {
                 ModelsToRender.Add(m);
-                foreach (Weapon w in m.weapons.Values)
+                foreach (Weapon w in m.weapons)
                     if (w.model != null)
                         ModelsToRender.Add(w.model);
             }
@@ -1244,7 +1244,7 @@ main()
                     if (m.dat_melee != null)
                         RenderTools.DrawVBN(m.dat_melee.bones);
 
-                    foreach (Weapon w in m.weapons.Values)
+                    foreach (Weapon w in m.weapons)
                         if (w.model != null && w.model.vbn != null && w.model.isVisible)
                             RenderTools.DrawVBN(w.model.vbn);
                 }
@@ -2202,7 +2202,7 @@ main()
             {
                 if (m.vbn != null)
                     Runtime.TargetAnim.nextFrame(m.vbn);
-                foreach (Weapon w in m.weapons.Values)
+                foreach (Weapon w in m.weapons)
                 {
                     // assign target anim to match the Runtime one, if possible.
                     // we make the assumption that animations named the same have the

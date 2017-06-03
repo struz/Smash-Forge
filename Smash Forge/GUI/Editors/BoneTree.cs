@@ -72,7 +72,7 @@ namespace Smash_Forge
             tbl.Rows.Add("X Scale", Runtime.TargetVBN.bone(treeView1.SelectedNode.Text).scale[0]);
             tbl.Rows.Add("Y Scale", Runtime.TargetVBN.bone(treeView1.SelectedNode.Text).scale[1]);
             tbl.Rows.Add("Z Scale", Runtime.TargetVBN.bone(treeView1.SelectedNode.Text).scale[2]);
-            Runtime.TargetVBN.reset();
+            Runtime.TargetVBN.reset();            
         }
 
         private void textBox1_TextChanged(object sender, EventArgs e)
