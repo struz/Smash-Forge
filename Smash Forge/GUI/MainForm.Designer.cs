@@ -41,6 +41,7 @@
             this.exportModelToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator4 = new System.Windows.Forms.ToolStripSeparator();
             this.clearWorkspaceToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.saveConfigToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.edittToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.hashMatchToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.addToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -131,6 +132,7 @@
             this.exportErrorLogToolStripMenuItem,
             this.exportModelToolStripMenuItem,
             this.toolStripSeparator4,
+            this.saveConfigToolStripMenuItem,
             this.clearWorkspaceToolStripMenuItem});
             this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
             this.fileToolStripMenuItem.Size = new System.Drawing.Size(37, 20);
@@ -203,6 +205,13 @@
             this.clearWorkspaceToolStripMenuItem.Size = new System.Drawing.Size(162, 22);
             this.clearWorkspaceToolStripMenuItem.Text = "Clear Workspace";
             this.clearWorkspaceToolStripMenuItem.Click += new System.EventHandler(this.clearWorkspaceToolStripMenuItem_Click);
+            // 
+            // saveConfigToolStripMenuItem
+            // 
+            this.saveConfigToolStripMenuItem.Name = "saveConfigToolStripMenuItem";
+            this.saveConfigToolStripMenuItem.Size = new System.Drawing.Size(162, 22);
+            this.saveConfigToolStripMenuItem.Text = "Save Config";
+            this.saveConfigToolStripMenuItem.Click += new System.EventHandler(this.saveConfigToolStripMenuItem_Click);
             // 
             // edittToolStripMenuItem
             // 
@@ -794,6 +803,7 @@
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator5;
         private System.Windows.Forms.ToolStripMenuItem clearToolStripMenuItem1;
         private System.Windows.Forms.ToolStripMenuItem openDATTextureEditorToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem saveConfigToolStripMenuItem;
     }
 }
 

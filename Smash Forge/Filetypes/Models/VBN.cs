@@ -65,15 +65,36 @@ namespace Smash_Forge
             return Text;
         }
 
+        public static float rot90 = (float)(90*(Math.PI / 180));
+
+        public int CheckControl(Ray r)
+        {
+
+            Vector3 pos_c = Vector3.Transform(Vector3.Zero, transform);
+            if (RenderTools.intersectCircle(pos_c, 2f, 30, r.p1, r.p2))
+                return 1;
+            
+
+            return -1;
+        }
+
         public void Draw()
         {
+            Vector3 pos_c = Vector3.Transform(Vector3.Zero, transform);
             // first calcuate the point and draw a point
             if (IsSelected)
+            {
+                /*GL.Color3(Color.Red);
+                RenderTools.drawCircleOutline(pos_c, 2f, 30, Matrix4.CreateRotationX(0));
+                GL.Color3(Color.Green);
+                RenderTools.drawCircleOutline(pos_c, 2f, 30, Matrix4.CreateRotationX(rot90));
+                GL.Color3(Color.Gold);
+                RenderTools.drawCircleOutline(pos_c, 2f, 30, Matrix4.CreateRotationY(rot90));*/
                 GL.Color3(Color.Red);
+            }
             else
                 GL.Color3(Color.GreenYellow);
 
-            Vector3 pos_c = Vector3.Transform(Vector3.Zero, transform);
             RenderTools.drawCube(pos_c, .1f);
 
             // now draw line between parent 
@@ -242,11 +263,11 @@ namespace Smash_Forge
             return boneId.Clamp(0, int.MaxValue);
         }
 
-        public void update()
+        public void update(bool reset = false)
         {
             for (int i = 0; i < bones.Count; i++)
             {
-                Bone boneData = bones[i].inheritFrom != null ? bones[i].inheritFrom : bones[i];
+                Bone boneData = bones[i].inheritFrom != null ? bones[i].inheritFrom : bones[i];                
                 bones[i].transform = Matrix4.CreateScale(boneData.sca) * Matrix4.CreateFromQuaternion(boneData.rot) * Matrix4.CreateTranslation(boneData.pos);
                 if (bones[i].inheritFrom != null)
                 {
@@ -259,6 +280,7 @@ namespace Smash_Forge
                 {
                     bones[i].transform = bones[i].transform * bones[(int)bones[i].parentIndex].transform;
                 }
+                if (i == 0 && !reset && Runtime.model_scale != 1) bones[i].transform *= Matrix4.CreateScale(Runtime.model_scale);
             }
         }
         public void reset()
@@ -269,7 +291,7 @@ namespace Smash_Forge
                 bones[i].rot = (FromEulerAngles(bones[i].rotation[2], bones[i].rotation[1], bones[i].rotation[0]));
                 bones[i].sca = new Vector3(bones[i].scale[0], bones[i].scale[1], bones[i].scale[2]);
             }
-            update();
+            update(true);
             for (int i = 0; i < bones.Count; i++)
             {
                 try
@@ -281,6 +303,7 @@ namespace Smash_Forge
                     bones[i].invert = Matrix4.Zero;
                 }
             }
+            if(Runtime.model_scale != 1f) update();
         }
 
         public override void Read(string filename)

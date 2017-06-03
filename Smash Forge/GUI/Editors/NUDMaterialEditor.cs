@@ -92,19 +92,19 @@ namespace Smash_Forge
         Dictionary<string, string[]> propList = new Dictionary<string, string[]>()
         {
             { "NU_colorSamplerUV", new string[] { "X Scale", "Y Scale", "X Trans", "Y Trans"} },
-            { "NU_fresnelColor", new string[] { "Red", "Green", "Blue", "Alpha"} },
+            { "NU_fresnelColor", new string[] { "Red", "Green", "Blue", "Color Blend"} },
             { "NU_blinkColor", new string[] { "Red", "Green", "Blue", "Alpha"} },
-            { "NU_specularColor", new string[] { "Red", "Green", "Blue", "Intensity"} },
+            { "NU_specularColor", new string[] { "Red", "Green", "Blue", "Color Blend"} },
             { "NU_diffuseColor", new string[] { "Red", "Green", "Blue", "Alpha"} },
             { "NU_colorGain", new string[] { "Red", "Green", "Blue", "Intensity" } },
             { "NU_colorStepUV", new string[] { "Per Row", "Per Column", "FPT", "Frame Count" } },
             { "NU_finalColorGain", new string[] { "Red", "Green", "Blue", "Intensity" } },
-            { "NU_reflectionColor", new string[] { "Red", "Green", "Blue", "Intensity" } },
-            { "NU_aoMinGain", new string[] { "Red", "Green", "Blue", "Alpha"} },
+            { "NU_reflectionColor", new string[] { "Red", "Green", "Blue", "Color Blend" } },
+            { "NU_aoMinGain", new string[] { "Red", "Green", "Blue", ""} },
             { "NU_reflectionParams", new string[] { "Tex Sharpness", "Cubemap Brightness", "Cubemap Intensity", ""} },
             { "NU_lightMapColorOffset", new string[] { "", "", "", "" } },
-            { "NU_specularParams", new string[] { "", "Intensity", "", ""} },
-            { "NU_fresnelParams", new string[] { "", "", "", ""} },
+            { "NU_specularParams", new string[] { "", "Exponent", "", ""} },
+            { "NU_fresnelParams", new string[] { "Exponent", "", "", ""} },
             { "NU_alphaBlendParams", new string[] { "", "", "", "" } },
             { "NU_fogParams", new string[] { "Distance", "", "", "Intensity" } },
             { "NU_fogColor", new string[] { "Red", "Green", "Blue", "Alpha"} },
@@ -154,6 +154,8 @@ namespace Smash_Forge
             {
                 comboBox1.Items.Add("Material_" + i);
             }
+
+            tableLayoutPanel2.Enabled = false;
 
             comboBox7.Items.Clear();
             foreach(string s in propList.Keys)
@@ -364,7 +366,9 @@ namespace Smash_Forge
             if (listView1.SelectedItems.Count > 0)
             {
                 index = listView1.Items.IndexOf(listView1.SelectedItems[0]);
+                tableLayoutPanel2.Enabled = true;
             }
+            else tableLayoutPanel2.Enabled = false;
             if(index >= material[current].textures.Count)
             {
                 MessageBox.Show("Texture doesn't exist");
@@ -779,7 +783,8 @@ namespace Smash_Forge
                     h = glControl1.Height / HeightPre;
                 }
             }
-
+            if (float.IsInfinity(h)) h = 1;
+            Console.WriteLine(w + " " + h);
             GL.BindTexture(TextureTarget.Texture2D, rt);
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)All.ClampToBorder);
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)All.ClampToBorder);

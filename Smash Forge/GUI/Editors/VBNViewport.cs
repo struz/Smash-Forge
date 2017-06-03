@@ -74,9 +74,9 @@ namespace Smash_Forge
         float rot = 0;
         float x = 0;
         float lookup = 0;
-        float height = 0;
+        float height = 1.5f;
         float width = 0;
-        float zoom = 0, nzoom = 0;
+        float zoom = -25f, nzoom = 0;
         float mouseXLast = 0;
         float mouseYLast = 0;
         float mouseSLast = 0;
@@ -343,422 +343,6 @@ namespace Smash_Forge
         #endregion
 
         #region Rendering
-
-        public static string vs = @"#version 330
-
-in vec3 vPosition;
-in vec4 vColor;
-in vec3 vNormal;
-in vec3 vTangent;
-in vec3 vBiTangent;
-in vec2 vUV;
-in vec4 vBone;
-in vec4 vWeight;
-
-out vec3 pos;
-out vec3 tan;
-out vec3 bit;
-out vec4 color;
-out vec2 texcoord;
-out vec3 normal;
-out vec3 fragpos;
-
-out vec4 lightPos;
-
-uniform vec4 colorSamplerUV;
-uniform mat4 eyeview;
-uniform mat4 lightview;
-uniform uint flags;
-
-uniform bones
-{
-    mat4 transforms[200];
-} bones_;
-
-uniform int renderType;
-
-
-vec4 skin(vec3 po, ivec4 index);
-vec3 skinNRM(vec3 po, ivec4 index);
- 
-vec4 skin(vec3 po, ivec4 index)
-{
-    vec4 oPos = vec4(po.xyz, 1.0);
-
-    oPos = bones_.transforms[index.x] * vec4(po, 1.0) * vWeight.x;
-    oPos += bones_.transforms[index.y] * vec4(po, 1.0) * vWeight.y;
-    oPos += bones_.transforms[index.z] * vec4(po, 1.0) * vWeight.z;
-    oPos += bones_.transforms[index.w] * vec4(po, 1.0) * vWeight.w;
-
-    return oPos;
-}
-
-vec3 skinNRM(vec3 nr, ivec4 index)
-{
-    vec3 nrmPos = vec3(0);
-	
-    if(vWeight.x != 0.0) nrmPos = mat3(bones_.transforms[index.x]) * nr * vWeight.x;
-    if(vWeight.y != 0.0) nrmPos += mat3(bones_.transforms[index.y]) * nr * vWeight.y;
-    if(vWeight.z != 0.0) nrmPos += mat3(bones_.transforms[index.z]) * nr * vWeight.z;
-    if(vWeight.w != 0.0) nrmPos += mat3(bones_.transforms[index.w]) * nr * vWeight.w;
-
-    return nrmPos;
-}
-
-void main()
-{
-    vec4 objPos = vec4(vPosition.xyz, 1.0);
-    ivec4 bi = ivec4(vBone); 
-
-    if(vBone.x != -1.0) objPos = skin(vPosition, bi);
-
-    objPos = eyeview * vec4(objPos.xyz, 1.0);
-
-    gl_Position = objPos;
-
-    texcoord = vec2((vUV * colorSamplerUV.xy) + colorSamplerUV.zw);
-    normal = vec3(0,0,0);
-    tan = vTangent;
-    bit = vBiTangent;
-    color = vec4(vNormal, 1);
-    pos = vec3(vPosition * mat3(eyeview));
-    lightPos = lightview * vec4(pos, 1.0);
-
-    if(renderType != 1){
-
-	if(renderType == 2){
-        	float normal = dot(vec4(vNormal * mat3(eyeview), 1.0), vec4(0.15,0.15,0.15,1.0)) ;
-        	color = vec4(normal, normal, normal, 1);
-	}
-        else
-            color = vColor;
-
-	fragpos = objPos.xyz;
-
-	if(vBone.x != -1.0) 
-		normal = normalize((skinNRM(vNormal.xyz, bi)).xyz) ; //  * -1 * mat3(eyeview)
-	else
-		normal = vNormal ;
-    }
-}";
-
-        public static string fs = @"#version 330
-
-in vec3 pos;
-in vec2 texcoord;
-in vec4 color;
-in vec3 normal;
-in vec3 tan;
-in vec3 bit;
-in vec3 fragpos;
-in vec4 lightPos;
-
-// Textures 
-uniform sampler2D dif;
-uniform sampler2D dif2;
-uniform sampler2D ramp;
-uniform sampler2D nrm;
-uniform samplerCube cube;
-uniform samplerCube stagecube;
-uniform sampler2D ao;
-
-uniform samplerCube cmap;
-
-uniform int hasDif;
-uniform int hasDif2;
-uniform int hasStage;
-uniform int hasCube;
-uniform int hasOo;
-uniform int hasNrm;
-uniform int hasRamp;
-uniform int hasRim;
-
-// Da Flags
-uniform uint flags;
-uniform int isTransparent;
-
-// Properties
-uniform vec4 colorSamplerUV;
-uniform vec4 colorOffset;
-uniform vec4 minGain;
-
-uniform vec4 fresnelColor;
-uniform vec4 specularColor;
-uniform vec4 specularColorGain;
-uniform vec4 diffuseColor;
-uniform vec4 colorGain;
-uniform vec4 finalColorGain;
-uniform vec4 reflectionColor;
-
-// params
-uniform vec4 fresnelParams;
-uniform vec4 specularParams;
-uniform vec4 reflectionParams;
-
-uniform int renderType;
-uniform int renderLighting;
-uniform int renderVertColor;
-uniform int renderNormal;
-
-uniform int renderDiffuse;
-uniform int renderSpecular;
-uniform int renderFresnel;
-uniform int renderReflection;
-uniform float diffuse_intensity;
-uniform float ambient;
-uniform float specular_intensity;
-uniform float fresnel_intensity;
-uniform float reflection_intensity;
-
-uniform int useNormalMap;
-
-uniform mat4 eyeview;
-
-uniform vec3 lightPosition;
-uniform vec3 lightDirection;
-uniform vec3 freslightDirection;
-
-uniform sampler2D shadowMap;
-
-
-// Tools
-// ------------------------------------------------------
-vec3 lerp(float v, vec3 from, vec3 to)
-{
-    return from + (to - from) * v;
-}
-
-vec3 rgb2hsv(vec3 c)
-{
-    vec4 K = vec4(0.0, -1.0 / 3.0, 2.0 / 3.0, -1.0);
-    vec4 p = mix(vec4(c.bg, K.wz), vec4(c.gb, K.xy), step(c.b, c.g));
-    vec4 q = mix(vec4(p.xyw, c.r), vec4(c.r, p.yzx), step(p.x, c.r));
-
-    float d = q.x - min(q.w, q.y);
-    float e = 1.0e-10;
-    return vec3(abs(q.z + (q.w - q.y) / (6.0 * d + e)), d / (q.x + e), q.x);
-}
-
-vec3 hsv2rgb(vec3 c)
-{
-    vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
-    vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www);
-    return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
-}
-
-float luminance(vec3 rgb)
-{
-    const vec3 W = vec3(0.2125, 0.7154, 0.0721);
-    return dot(rgb, W);
-}
-
-vec3 TintColor(vec3 col, float inten){
-	vec3 inputHSV = rgb2hsv(col);
-	return hsv2rgb(vec3(inputHSV.xy, pow(0.25, inten)));
-}
-
-vec3 calculate_tint_color(vec3 inputColor, float color_alpha, float blendAmount)
-{
-    float intensity = color_alpha*blendAmount;
-    vec3 inputHSV = rgb2hsv(inputColor);
-    vec3 outColorTint = hsv2rgb(vec3(inputHSV.x,inputHSV.y*intensity,1));
-    return outColorTint;
-}
-
-mat4 rotationMatrix(vec3 axis, float angle)
-{
-    axis = normalize(axis);
-    float s = sin(angle);
-    float c = cos(angle);
-    float oc = 1.0 - c;
-    
-    return mat4(oc * axis.x * axis.x + c,           oc * axis.x * axis.y - axis.z * s,  oc * axis.z * axis.x + axis.y * s,  0.0,
-                oc * axis.x * axis.y + axis.z * s,  oc * axis.y * axis.y + c,           oc * axis.y * axis.z - axis.x * s,  0.0,
-                oc * axis.z * axis.x - axis.y * s,  oc * axis.y * axis.z + axis.x * s,  oc * axis.z * axis.z + c,           0.0,
-                0.0,                                0.0,                                0.0,                                1.0);
-}
-
-float ShadowCalculation(vec4 fragPosLightSpace)
-{
-    vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
-    projCoords = projCoords * 0.5 + 0.5;
-    float closestDepth = texture(shadowMap, projCoords.xy).r; 
-    float currentDepth = projCoords.z;
-    float shadow = currentDepth > closestDepth  ? 1.0 : 0.0;
-
-    return shadow;
-}
-
-vec3 CalcBumpedNormal()
-{
-    // if no normal map, then return just the normal
-    if(hasNrm == 0 || useNormalMap == 0)
-	return normal;
-
-    vec3 Normal = normalize(normal);
-
-    vec3 Tangent = tan;
-    vec3 Bitangent = bit;
-    vec3 BumpMapNormal = texture2D(nrm, texcoord).xyz;
-    BumpMapNormal = 2.0 * BumpMapNormal - vec3(1.0, 1.0, 1.0);
-    vec3 NewNormal;
-    mat3 TBN = mat3(Tangent, Bitangent, Normal);
-    NewNormal = TBN * BumpMapNormal;
-    NewNormal = normalize(NewNormal);
-    return NewNormal;
-}
-
-vec3 RampColor(vec3 col){
-	if(hasRamp == 1){
-		float rampInputLuminance = luminance(col);
-		rampInputLuminance = clamp((rampInputLuminance), 0.00, 1.00); 
-		return texture2D(ramp, vec2(1.01-rampInputLuminance, 0.5)).rgb; 
-	}
-	else
-		return col;
-}
-
-
-
-vec3 sm4sh_shader(vec4 diffuse_map, vec4 ao_map, vec3 N){
-
-    vec3 I = vec3(0,0,-1) * mat3(eyeview);
-    float blendAmount = 0.5;
-    float RampIntensity = 1.0;
-	
-	ao_map = pow(ao_map, vec4(1));
-    //vec3 lightDirection = normalize(vec3(-0.5,0.4,1));
-    //vec3 lightPosition = vec3(0) * mat3(eyeview);
-    //vec3 L = lightPosition - fragpos;
-    //float attenuation = (1/length(L) + 0.5);
-
-    // light direction seems to be (z,x,y) from light_set_param
-    vec3 newDiffuseDirection = lightDirection; //normalize(I + diffuseLightDirection);
-    vec3 newFresnelDirection = freslightDirection; //normalize(I + fresnelLightDirection);
-    vec3 newSpecularDirection = lightDirection; //normalize(I + specularLightDirection);
-   
-//---------------------------------------------------------------------------------------------
-   // lambertian diffuse
-
-    float lambertBRDF = clamp((dot(newDiffuseDirection,N)),0,1);// * attenuation;
-    vec3 ao_blend = (ao_map.aaa) + (minGain.xyz);
-    //ao_blend = ao_blend + ao_blend * minGain.www;
-    vec3 diffuse_color = diffuse_map.xyz * ao_blend;
-    vec3 diffuse_shading = diffuse_color * lambertBRDF;
-	
-    vec3 resulting_color = vec3(0);
-	
-    if(renderDiffuse == 1)
-	{
-		resulting_color = (ambient * diffuse_color); 
-		resulting_color += diffuse_intensity*(diffuse_shading * RampColor(vec3(lambertBRDF)) * RampIntensity);
-		
-		//vec3 r = rgb2hsv(resulting_color.xyz);
-		//resulting_color.xyz = hsv2rgb(vec3(r.x, r.y*0.8, r.z));
-	}
-
-
-//---------------------------------------------------------------------------------------------
-    // blinn-phong specular
-    vec3 half_angle = normalize(newSpecularDirection); 
-    float blinnPhongSpec = pow(clamp((dot(half_angle,N)),0,1),specularParams.y);
-    blinnPhongSpec *= (1-(specularParams.x/100));
-    
-//---------------------------------------------------------------------------------------------
-    // basic fresnel with fresnelParams control
-    vec3 F0 = vec3(1);
-    float cosTheta = dot(newFresnelDirection, N);
-    vec3 fresnel = F0 * pow(1.0 - cosTheta, 3.75 + fresnelParams.x); 
-
-
-//---------------------------------------------------------------------------------------------
-	// reflection
-    //vec3 I = normalize(pos - lightPosition);
-    vec3 R = reflect(I, N);
-    R.y *= -1.0;
-    vec3 refColor = texture(stagecube, R).rgb;// * ao_map.aaa;
-	
- 
-//---------------------------------------------------------------------------------------------
-    // Calculate the color tint. input colors are r,g,b,alpha. alpha is color blend amount
-    vec3 spec_tint = calculate_tint_color(texture2D(dif, texcoord).xyz,specularColor.w,blendAmount);
-    vec3 fresnel_tint = calculate_tint_color(diffuse_map.xyz,fresnelColor.w,blendAmount);
-    vec3 reflection_tint = calculate_tint_color(diffuse_map.xyz,reflectionColor.w,blendAmount);
-    
-
-//---------------------------------------------------------------------------------------------
-    // add fresnel and specular
-    if(renderFresnel == 1)
-    	resulting_color += (fresnelColor.xyz * fresnel * fresnel_intensity * fresnel_tint);
-    
-    if(renderSpecular == 1)
-	resulting_color += (specularColor.xyz * blinnPhongSpec  * spec_tint * specular_intensity * ao_blend)*specularColorGain.xyz;//
-
-    if(renderReflection == 1)
-	resulting_color += reflectionColor.rgb * refColor * reflection_tint * reflection_intensity;
-
-    return resulting_color;
-}
-
-
-void
-main()
-{
-	// if the renderer wants to show something other than textures
-    if(renderType == 1 || renderType == 2 || renderType == 3){
-        gl_FragColor = color;
-    } else {
-
-	    // calcuate final color by mixing with vertex color
-	    vec4 fincol = vec4(0);
-
-	    vec4 fc = vec4(0,0,0,0);
-	    if(hasDif == 1){
-		    fc = texture2D(dif, texcoord);
-		    fincol = fc;
-    
-		    if(hasDif2 == 1){
-		    	fincol = texture2D(dif2, texcoord);// pow(texture2D(dif2, texcoord), vec4(2.2/1.0));
-		    	fincol = mix(fincol, fc, fc.a);
-		    	fincol.a = 1.0;
-		    }
-	    }
-
-	    float a = fincol.a;
-
-	    if(renderVertColor == 1) fincol = fincol * color;
-
-	    // color gains
-	    fincol = (colorOffset + fincol * colorGain); // the base color for material lighting
-	
-	    vec3 norm = CalcBumpedNormal();
-
-        if(renderNormal == 1){
-		    if(renderLighting == 1){
-			    fincol.xyz = sm4sh_shader(fincol, texture2D(nrm, texcoord).aaaa, norm);
-		    }
-    		else
-    		{
-        		// old lighting
-			    vec4 ao = texture2D(nrm, texcoord).aaaa * (1+minGain);
-			    fincol *= ao; // The ambient color. When all material ighting options are off, the rendered color should = diffuse * ao * (1+AOMinGain). Moved up from following section.
-
-                float normal = dot(vec4(norm * mat3(eyeview), 1.0), vec4(0.15,0.15,0.15,1.0)) ;
-                fincol *= normal;
-        	}
-    	}
-
-    	fincol = fincol * (finalColorGain);
-
-	    // correct alpha
-	    fincol.a = a;
-	    if(isTransparent == 0) fincol.a *= color.a;
-	    fincol.a *= finalColorGain.a;
-
-	    //fincol.xyz *= vec3(ShadowCalculation(lightPos));
-    	gl_FragColor = fincol;
-    }
-}";
         
         public int ubo_bones, ubo_bonesIT;
         public static int cubeTex;
@@ -771,15 +355,10 @@ main()
 
             if (shader == null)
             {
+
+                // shoudl vbn do this instead?
                 GL.GenBuffers(1, out ubo_bones);
                 GL.GenBuffers(1, out ubo_bonesIT);
-
-                shader = new Shader();
-
-                {
-                    shader.vertexShader(vs);
-                    shader.fragmentShader(fs);
-                }
             }
 
             int h = Height - groupBox2.ClientRectangle.Top;
@@ -815,8 +394,6 @@ main()
 
 
         int cf = 0;
-        Color back1 = Color.FromArgb((255 << 24) | (26 << 16) | (26 << 8) | (26));
-        Color back2 = Color.FromArgb((255 << 24) | (77 << 16) | (77 << 8) | (77));
         //Matrix4 v2;
         int sfb, sw=1024, sh=1024, depthmap;
         Matrix4 lightMatrix;
@@ -881,10 +458,10 @@ main()
             if (Runtime.renderBackGround)
             {
                 GL.Begin(PrimitiveType.Quads);
-                GL.Color3(back1);
+                GL.Color3(Runtime.back1);
                 GL.Vertex2(1.0, 1.0);
                 GL.Vertex2(-1.0, 1.0);
-                GL.Color3(back2);
+                GL.Color3(Runtime.back2);
                 GL.Vertex2(-1.0, -1.0);
                 GL.Vertex2(1.0, -1.0);
                 GL.End();
@@ -920,7 +497,9 @@ main()
 
             // drawing floor---------------------------
             if (Runtime.renderFloor)
-                RenderTools.drawFloor();
+            {
+                    RenderTools.drawFloor();
+            }
 
 
             //GL.Enable(EnableCap.LineSmooth); // This is Optional 
@@ -944,10 +523,11 @@ main()
             GL.Enable(EnableCap.StencilTest);
             GL.StencilOp(StencilOp.Keep, StencilOp.Keep, StencilOp.Replace);
 
-            //GL.Enable(EnableCap.FramebufferSrgb);
+            GL.Enable(EnableCap.FramebufferSrgb);
 
 
             // draw models
+            //RenderTools.drawHitboxCircle(new Vector3(3, 3, 3), 5, 30, v.ClearTranslation().Inverted());
 
             if (Runtime.renderModel) DrawModels();
             /*{
@@ -961,6 +541,7 @@ main()
                     }
                 }
             }*/
+
 
             GL.BlendFunc(BlendingFactorSrc.SrcAlpha, BlendingFactorDest.OneMinusSrcAlpha);
             GL.DepthFunc(DepthFunction.Less);
@@ -994,7 +575,7 @@ main()
 
         public void UpdateMousePosition()
         {
-            float zoomscale = 1;
+            float zoomscale = Runtime.zoomspeed;
 
             if ((OpenTK.Input.Mouse.GetState().RightButton == OpenTK.Input.ButtonState.Pressed))
             {
@@ -1210,7 +791,8 @@ main()
                     if (m.mta != null)
                         m.nud.applyMTA(m.mta, (int)nupdFrame.Value);//Apply base mta
                     if (Runtime.TargetMTA != null) // TODO: make this work with weapon models
-                        m.nud.applyMTA(Runtime.TargetMTA, (int)nupdFrame.Value);//Apply additional mta (can override base)
+                        foreach(MTA mta in Runtime.TargetMTA)
+                        m.nud.applyMTA(mta, (int)nupdFrame.Value);//Apply additional mta (can override base)
 
                     m.nud.Render(shader);
                     shader.disableAttrib();
@@ -1898,6 +1480,7 @@ main()
                     }
 
                     GL.DepthMask(false);
+
                     if (h.Extended)
                     {
                         var va2 = new Vector3(h.X2, h.Y2, h.Z2);
@@ -1968,7 +1551,7 @@ main()
                         }
                     }
 
-                    va = Vector3.Transform(va, b.transform.ClearScale());
+                    //va = Vector3.Transform(va, b.transform);
 
                     GL.Color4(Color.FromArgb(50, Color.Green));
 
@@ -1977,30 +1560,28 @@ main()
                         switch (h.Zone)
                         {
                             case Hurtbox.LW_ZONE:
-                                GL.Color4(Color.FromArgb(50, Color.Aqua));
+                                GL.Color4(Color.FromArgb(60, Color.Aqua));
                                 break;
                             case Hurtbox.N_ZONE:
-                                GL.Color4(Color.FromArgb(50, Color.Green));
+                                GL.Color4(Color.FromArgb(60, Color.Green));
                                 break;
                             case Hurtbox.HI_ZONE:
-                                GL.Color4(Color.FromArgb(50, Color.Orange));
+                                GL.Color4(Color.FromArgb(60, Color.Orange));
                                 break;
                         }
                     }
 
-                    GL.DepthMask(false);
                     var va2 = new Vector3(h.X2, h.Y2, h.Z2);
 
-                    if (h.Bone != -1)
-                        va2 = Vector3.Transform(va2, b.transform.ClearScale());
+                    //if (h.Bone != -1)va2 = Vector3.Transform(va2, b.transform);
 
                     if (h.isSphere)
                     {
-                        RenderTools.drawSphere(va, h.Size, 30);
+                        RenderTools.drawSphereTransformedVisible(va, h.Size, 30, b.transform);
                     }
                     else
                     {
-                        RenderTools.drawReducedSidesCylinder(va, va2, h.Size);
+                        RenderTools.drawReducedCylinderTransformed(va, va2, h.Size, b.transform);
                     }
                 }
 
@@ -2247,7 +1828,8 @@ main()
             nupdFrame.Value = 0;
             nupdMaxFrame.Value = m.numFrames;
             //Console.WriteLine(m.numFrames);
-            Runtime.TargetMTA = m;
+            Runtime.TargetMTA.Clear();
+            Runtime.TargetMTA.Add(m);
         }
 
         private void VBNViewport_KeyPress(object sender, System.Windows.Forms.KeyPressEventArgs e)
@@ -2342,6 +1924,19 @@ main()
             p1 = va.Xyz;
             p2 = p1 - (va - (va + vb)).Xyz * 100;
 
+            /*if(MainForm.Instance.boneTreePanel.treeView1.SelectedNode != null)
+            {
+                // check if a control was clicked
+                Bone b = (Bone)MainForm.Instance.boneTreePanel.treeView1.SelectedNode;
+
+                if(b.CheckControl(new Ray(p1, p2)) == 1)
+                {
+                    //Console.WriteLine("Selected");
+                    //freezeCamera = true;
+                    return;
+                }
+            }*/
+
             SortedList<double, Bone> selected = new SortedList<double, Bone>(new DuplicateKeyComparer<double>());
 
             foreach (ModelContainer con in Runtime.ModelContainers)
@@ -2364,7 +1959,7 @@ main()
                     foreach (NUD.Mesh mesh in con.nud.mesh)
                     {
                         Vector3 closest = Vector3.Zero;
-                        foreach (NUD.Polygon poly in mesh.polygons)
+                        foreach (NUD.Polygon poly in mesh.Nodes)
                         {
                             int i = 0;
                             foreach (NUD.Vertex v in poly.vertices)

@@ -8,15 +8,27 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using WeifenLuo.WinFormsUI.Docking;
+using System.Xml;
+using System.Globalization;
 
 namespace Smash_Forge
 {
     public partial class MeshList : DockContent
     {
+        
+        public static ImageList iconList = new ImageList();
+
         public MeshList()
         {
             InitializeComponent();
             refresh();
+
+            iconList.ImageSize = new Size(24, 24);
+            iconList.Images.Add("sex", Properties.Resources.sexy_green_down_arrow);
+            iconList.Images.Add("polygon", Properties.Resources.icon_polygon);
+            iconList.Images.Add("mesh", Properties.Resources.icon_mesh);
+            iconList.Images.Add("model", Properties.Resources.icon_model);
+            treeView1.ImageList = iconList;
         }
 
         bool changingValue = false;
@@ -35,14 +47,14 @@ namespace Smash_Forge
                     else
                         model = new TreeNode(m.name) { Tag = m, Checked = m.isVisible };
                     treeView1.Nodes.Add(model);
+                    model.ImageKey = "model";
+                    model.SelectedImageKey = "model";
                     foreach (NUD.Mesh mesh in m.nud.mesh)
                     {
                         model.Nodes.Add(mesh);
                         int i = 0;
-                        mesh.Nodes.Clear();
-                        foreach(NUD.Polygon poly in mesh.polygons)
+                        foreach(NUD.Polygon poly in mesh.Nodes)
                         {
-                            mesh.Nodes.Add(poly);
                             poly.Text = "Polygon_" + i;
                             i++;
                         }
@@ -65,7 +77,7 @@ namespace Smash_Forge
                             weaponModel.Nodes.Add(mesh);
                             int i = 0;
                             mesh.Nodes.Clear();
-                            foreach (NUD.Polygon poly in mesh.polygons)
+                            foreach (NUD.Polygon poly in mesh.Nodes)
                             {
                                 mesh.Nodes.Add(poly);
                                 poly.Text = "Polygon_" + i;
@@ -83,11 +95,12 @@ namespace Smash_Forge
         {
             if (e.Node.Tag != null && e.Node.Tag is ModelContainer)
                 ((ModelContainer)e.Node.Tag).isVisible = e.Node.Checked;
-            /*if (e.Node.Tag is NUD.Mesh) {
-                ((NUD.Mesh)e.Node.Tag).isVisible = e.Node.Checked;
+            if (e.Node.Tag is NUD) {
+                                            
+                foreach (TreeNode n in e.Node.Nodes) n.Checked = e.Node.Checked;
                 
             }
-            else if (e.Node.Tag is NUD.Polygon) {
+            /*else if (e.Node.Tag is NUD.Polygon) {
                 ((NUD.Polygon)e.Node.Tag).isVisible = e.Node.Checked;
             }
             else if (e.Node.Tag is NUD){
@@ -296,7 +309,6 @@ namespace Smash_Forge
                 if (treeView1.SelectedNode is NUD.Polygon)
                 {
                     NUD.Mesh parent = ((NUD.Mesh)treeView1.SelectedNode.Parent);
-                    parent.polygons.Remove((NUD.Polygon)treeView1.SelectedNode);
                     parent.Nodes.Remove((NUD.Polygon)treeView1.SelectedNode);
                     NUD parentn = ((NUD)parent.Parent.Tag);
                     parentn.PreRender();
@@ -321,8 +333,8 @@ namespace Smash_Forge
                         Runtime.ModelContainers.Remove(m);
                     if (Runtime.TargetVBN == m.vbn)
                         Runtime.TargetVBN = null;
-                    if (Runtime.TargetMTA == m.mta)
-                        Runtime.TargetMTA = null;
+                    //if (Runtime.TargetMTA == m.mta)
+                    //    Runtime.TargetMTA = null;
                     if (Runtime.TargetNUD == m.nud)
                         Runtime.TargetNUD = null;
 
@@ -433,7 +445,7 @@ namespace Smash_Forge
             {
                 mesh.boneflag = 8;
                 mesh.singlebind = brs.boneIndex;
-                foreach (NUD.Polygon poly in mesh.polygons)
+                foreach (NUD.Polygon poly in mesh.Nodes)
                 {
                     poly.polflag = 0;
                     poly.vertSize = poly.vertSize & 0x0F;
@@ -468,7 +480,7 @@ namespace Smash_Forge
 
             foreach(NUD.Mesh m in nud.mesh)
             {
-                foreach (NUD.Polygon p in m.polygons)
+                foreach (NUD.Polygon p in m.Nodes)
                 {
                     foreach(NUD.Material mat in p.materials)
                     {
@@ -617,6 +629,336 @@ namespace Smash_Forge
                         break;
                     }
                 }
+            }
+        }
+
+        private void detachToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (treeView1.SelectedNode is NUD.Polygon)
+            {
+                NUD.Polygon p = ((NUD.Polygon)treeView1.SelectedNode);
+                NUD.Mesh parent = (NUD.Mesh)p.Parent;
+                p.Parent.Nodes.Remove(p);
+                NUD.Mesh m = new NUD.Mesh();
+                ((NUD)parent.Parent.Tag).mesh.Add(m);
+                m.Text = parent.Text + "_" + p.Text;
+                m.Nodes.Add(p);
+
+                if (parent.Nodes.Count == 0) ((NUD)parent.Parent.Tag).mesh.Remove(parent);
+
+                refresh();
+            }
+        }
+
+        private void aboveToolStripMenuItem1_Click(object sender, EventArgs e)
+        {
+            if (treeView1.SelectedNode is NUD.Mesh)
+            {
+                NUD.Mesh m = ((NUD.Mesh)treeView1.SelectedNode);
+
+                NUD nud = (NUD)(m.Parent.Tag);
+
+                int index = nud.mesh.IndexOf(m);
+
+                if(index > 0)
+                {
+                    nud.mesh.Remove(m);
+
+                    NUD.Mesh merge = nud.mesh[index-1];
+
+                    List<TreeNode> polygons = new List<TreeNode>();
+                    foreach(NUD.Polygon p in m.Nodes)
+                        polygons.Add(p);
+
+                    foreach(NUD.Polygon p in polygons)
+                    {
+                        m.Nodes.Remove(p);
+                        merge.Nodes.Add(p);
+                    }
+
+                    refresh();
+                }
+            }
+        }
+
+        private void belowToolStripMenuItem1_Click(object sender, EventArgs e)
+        {
+            if (treeView1.SelectedNode is NUD.Mesh)
+            {
+                NUD.Mesh m = ((NUD.Mesh)treeView1.SelectedNode);
+
+                NUD nud = (NUD)(m.Parent.Tag);
+
+                int index = nud.mesh.IndexOf(m);
+
+                if (index+1 < nud.mesh.Count)
+                {
+                    nud.mesh.Remove(m);
+
+                    NUD.Mesh merge = nud.mesh[index];
+
+                    List<TreeNode> polygons = new List<TreeNode>();
+                    foreach (NUD.Polygon p in m.Nodes)
+                        polygons.Add(p);
+
+                    foreach (NUD.Polygon p in polygons)
+                    {
+                        m.Nodes.Remove(p);
+                        merge.Nodes.Add(p);
+                    }
+
+                    refresh();
+                }
+            }
+        }
+
+        private void flipUVsHorizontalToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (treeView1.SelectedNode is NUD.Polygon)
+            {
+                NUD.Polygon p = (NUD.Polygon)treeView1.SelectedNode;
+
+                foreach (NUD.Vertex v in p.vertices)
+                {
+                    for (int i = 0; i < v.tx.Count; i++)
+                        v.tx[i] = new OpenTK.Vector2(1 - v.tx[i].X, v.tx[i].Y);
+                }
+
+                foreach (ModelContainer con in Runtime.ModelContainers)
+                {
+                    if (con.nud != null)
+                        con.nud.PreRender();
+                }
+            }
+        }
+
+        private void exportAsXMLToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (treeView1.SelectedNode.Tag is NUD)
+            {
+                NUD nud = (NUD)treeView1.SelectedNode.Tag;
+
+                string filename = "";
+                SaveFileDialog save = new SaveFileDialog();
+                save.Filter = "XML Material|*.xml";
+                DialogResult result = save.ShowDialog();
+
+                if (result == DialogResult.OK)
+                {
+                    filename = save.FileName;
+                    if (filename.EndsWith(".xml"))
+                    {
+                        exportMaterialAsXML(nud, filename);
+                    }
+                }
+            }
+        }
+
+        private void exportMaterialAsXML(NUD n, string filename)
+        {
+            XmlDocument doc = new XmlDocument();
+            
+            XmlNode mainNode = doc.CreateElement("NUDMATERIAL");
+            XmlAttribute polycount = doc.CreateAttribute("polycount");
+            mainNode.Attributes.Append(polycount);
+            doc.AppendChild(mainNode);
+
+            int pcount = 0;
+
+            foreach(NUD.Mesh m in n.mesh)
+            {
+                XmlNode meshnode = doc.CreateElement("mesh");
+                XmlAttribute name = doc.CreateAttribute("name"); name.Value = m.Text; meshnode.Attributes.Append(name);
+                mainNode.AppendChild(meshnode);
+                foreach(NUD.Polygon p in m.Nodes)
+                {
+                    XmlNode polynode = doc.CreateElement("polygon");
+                    XmlAttribute pid = doc.CreateAttribute("id"); pid.Value = pcount.ToString(); polynode.Attributes.Append(pid);
+                    meshnode.AppendChild(polynode);
+
+                    foreach(NUD.Material mat in p.materials)
+                    {
+                        XmlNode matnode = doc.CreateElement("material");
+                        polynode.AppendChild(matnode);
+                        // attributes
+                        { XmlAttribute flags = doc.CreateAttribute("flags"); flags.Value = mat.flags.ToString("x"); matnode.Attributes.Append(flags); }
+                        { XmlAttribute a = doc.CreateAttribute("srcFactor"); a.Value = mat.srcFactor.ToString(); matnode.Attributes.Append(a); }
+                        { XmlAttribute a = doc.CreateAttribute("dstFactor"); a.Value = mat.dstFactor.ToString(); matnode.Attributes.Append(a); }
+                        { XmlAttribute a = doc.CreateAttribute("REF0"); a.Value = mat.ref0.ToString(); matnode.Attributes.Append(a); }
+                        { XmlAttribute a = doc.CreateAttribute("REF1"); a.Value = mat.ref1.ToString(); matnode.Attributes.Append(a); }
+                        { XmlAttribute a = doc.CreateAttribute("cullmode"); a.Value = mat.cullMode.ToString("x"); matnode.Attributes.Append(a); }
+                        { XmlAttribute a = doc.CreateAttribute("zbuffoff"); a.Value = mat.zBufferOffset.ToString(); matnode.Attributes.Append(a); }
+
+                        // textures
+                        foreach (NUD.Mat_Texture tex in mat.textures)
+                        {
+                            XmlNode texnode = doc.CreateElement("texture");
+                            { XmlAttribute a = doc.CreateAttribute("hash"); a.Value = tex.hash.ToString("x"); texnode.Attributes.Append(a); }
+                            { XmlAttribute a = doc.CreateAttribute("wrapmodeS"); a.Value = tex.WrapMode1.ToString("x"); texnode.Attributes.Append(a); }
+                            { XmlAttribute a = doc.CreateAttribute("wrapmodeT"); a.Value = tex.WrapMode2.ToString("x"); texnode.Attributes.Append(a); }
+                            { XmlAttribute a = doc.CreateAttribute("minfilter"); a.Value = tex.minFilter.ToString("x"); texnode.Attributes.Append(a); }
+                            { XmlAttribute a = doc.CreateAttribute("magfilter"); a.Value = tex.magFilter.ToString("x"); texnode.Attributes.Append(a); }
+                            { XmlAttribute a = doc.CreateAttribute("mipdetail"); a.Value = tex.mipDetail.ToString("x"); texnode.Attributes.Append(a); }
+                            matnode.AppendChild(texnode);
+                        }
+
+                        // params
+                        foreach(KeyValuePair<string, float[]> k in mat.entries)
+                        {
+                            XmlNode paramnode = doc.CreateElement("param");
+                            XmlAttribute a = doc.CreateAttribute("name"); a.Value = k.Key; paramnode.Attributes.Append(a);
+                            matnode.AppendChild(paramnode);
+
+                            foreach (float f in k.Value) paramnode.InnerText += f.ToString() + " ";
+                        }
+                    }
+                    
+                    pcount++;
+                }
+            }
+            polycount.Value = pcount.ToString();
+            
+            doc.Save(filename);
+        }
+
+        private void importFromXMLToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (treeView1.SelectedNode.Tag is NUD)
+            {
+                NUD nud = (NUD)treeView1.SelectedNode.Tag;
+
+                string filename = "";
+                OpenFileDialog save = new OpenFileDialog();
+                save.Filter = "XML Material|*.xml";
+                DialogResult result = save.ShowDialog();
+
+                if (result == DialogResult.OK)
+                {
+                    filename = save.FileName;
+                    if (filename.EndsWith(".xml"))
+                    {
+                        importMaterialAsXML(nud, filename);
+                    }
+                }
+            }
+        }
+
+        private void importMaterialAsXML(NUD n, string filename)
+        {
+            XmlDocument doc = new XmlDocument();
+            doc.Load(filename);
+
+            XmlNode main = doc.ChildNodes[0];
+
+            List<NUD.Material> materials = new List<NUD.Material>();
+            List<int> ids = new List<int>();
+
+            // validate at every step
+            foreach (XmlNode meshnode in main.ChildNodes)
+            {
+                if (meshnode.Name.Equals("mesh"))
+                {
+                    foreach (XmlNode polynode in meshnode.ChildNodes)
+                    {
+                        if (polynode.Name.Equals("polygon"))
+                        {
+                            ids.Add(polynode.ChildNodes.Count);
+
+                            foreach (XmlNode matnode in polynode.ChildNodes)
+                            {
+                                if (matnode.Name.Equals("material"))
+                                {
+                                    // being creating the material
+                                    NUD.Material mat = new NUD.Material();
+                                    materials.Add(mat);
+                                    foreach (XmlAttribute a in matnode.Attributes)
+                                    {
+                                        switch (a.Name)
+                                        {
+                                            case "flags": uint f = 0; if (uint.TryParse(a.Value, NumberStyles.HexNumber, null, out f)) { mat.flags = f; }; break;
+                                            case "srcFactor": int.TryParse(a.Value, out mat.srcFactor); break;
+                                            case "dstFactor": int.TryParse(a.Value, out mat.dstFactor); break;
+                                            case "REF0": int.TryParse(a.Value, out mat.ref0); break;
+                                            case "REF1": int.TryParse(a.Value, out mat.ref1); break;
+                                            case "cullmode": int cm = 0; if (int.TryParse(a.Value, NumberStyles.HexNumber, null, out cm)) { mat.cullMode = cm; }; break;
+                                            case "zbuffoff": int.TryParse(a.Value, out mat.zBufferOffset); break;
+                                        }
+                                    }
+
+                                    foreach (XmlNode mnode in matnode.ChildNodes)
+                                    {
+                                        //textures
+                                        if (mnode.Name.Equals("texture"))
+                                        {
+                                            NUD.Mat_Texture tex = new NUD.Mat_Texture();
+                                            mat.textures.Add(tex);
+                                            foreach (XmlAttribute a in mnode.Attributes)
+                                            {
+                                                switch (a.Name)
+                                                {
+                                                    case "hash": int f = 0; if (int.TryParse(a.Value, NumberStyles.HexNumber, null, out f)) { tex.hash = f; }; break;
+                                                    case "wrapmodeS": int.TryParse(a.Value, out tex.WrapMode1); break;
+                                                    case "wrapmodeT": int.TryParse(a.Value, out tex.WrapMode2); break;
+                                                    case "minfilter": int.TryParse(a.Value, out tex.minFilter); break;
+                                                    case "magfilter": int.TryParse(a.Value, out tex.magFilter); break;
+                                                    case "mipdetail": int.TryParse(a.Value, out tex.mipDetail); break;
+                                                }
+                                            }
+                                        }
+                                        // parameters
+                                        if (mnode.Name.Equals("param"))
+                                        {
+                                            string name = "";
+                                            foreach (XmlAttribute a in mnode.Attributes)
+                                            {
+                                                switch (a.Name)
+                                                {
+                                                    case "name": name = a.Value; break;
+                                                }
+                                            }
+                                            string[] values = mnode.InnerText.Split(' ');
+                                            List<float> v = new List<float>();
+                                            float f = 0;
+                                            foreach (string s in values) if (float.TryParse(s, out f)) v.Add(f);
+                                            mat.entries.Add(name, v.ToArray());
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            int pid = 0;
+            int mid = 0;
+            foreach (NUD.Mesh m in n.mesh)
+            {
+                foreach (NUD.Polygon p in m.Nodes)
+                {
+                    p.materials.Clear();
+                    for(int i = 0; i < ids[pid]; i++)
+                    {
+                        p.materials.Add(materials[mid++]);
+                    }
+                    pid++;
+                }
+            }
+        }
+
+        private void addBlankMeshToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (treeView1.SelectedNode.Tag is NUD)
+            {
+                NUD nud = (NUD)treeView1.SelectedNode.Tag;
+
+                NUD.Mesh m = new NUD.Mesh();
+
+                m.Text = "Blank Mesh";
+
+                nud.mesh.Add(m);
+
+                refresh();
             }
         }
     }

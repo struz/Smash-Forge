@@ -481,7 +481,7 @@ namespace Smash_Forge
                 {
                     if (pair.Key.EndsWith(".omo"))
                     {
-                        var anim = OMO.read(new FileData(pair.Value));
+                        var anim = OMOOld.read(new FileData(pair.Value));
                         string AnimName = Regex.Match(pair.Key, @"([A-Z][0-9][0-9])(.*)").Groups[0].ToString();
                         //AnimName = pair.Key;
                         //AnimName = AnimName.Remove(AnimName.Length - 4);
@@ -551,7 +551,7 @@ namespace Smash_Forge
 
             if (filename.EndsWith(".omo"))
             {
-                this.animations.Add(filename, OMO.read(new FileData(filename)));
+                this.animations.Add(filename, OMOOld.read(new FileData(filename)));
                 //animNode.Nodes.Add(filename);
             }
             if (filename.EndsWith(".chr0"))

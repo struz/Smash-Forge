@@ -18,8 +18,8 @@ namespace Smash_Forge.GUI
 
             checkBox1.Checked = Runtime.renderModel;
             checkBox2.Checked = Runtime.renderBones;
-            checkBox3.Checked = Runtime.renderHitboxes;
-            checkBox4.Checked = Runtime.renderPath;
+            checkBox3.Checked = Runtime.renderPath;
+            checkBox4.Checked = Runtime.renderHitboxes;
             checkBox5.Checked = Runtime.renderFloor;
             backgroundCB.Checked = Runtime.renderBackGround;
             checkBox6.Checked = Runtime.renderLVD;
@@ -54,6 +54,7 @@ namespace Smash_Forge.GUI
             spcTB.Text = Runtime.spc_inten + "";
             frsTB.Text = Runtime.frs_inten + "";
             refTB.Text = Runtime.ref_inten + "";
+            modelscaleTB.Text = Runtime.model_scale + "";
 
             cb_normals.Checked = Runtime.renderNormals;
             cb_vertcolor.Checked = Runtime.renderVertColor;
@@ -252,6 +253,18 @@ namespace Smash_Forge.GUI
             }
             else
                 refTB.BackColor = Color.Red;
+        }
+
+        private void modelscaleTB_TextChanged(object sender, EventArgs e)
+        {
+            float i = 0;
+            if (float.TryParse(modelscaleTB.Text, out i))
+            {
+                modelscaleTB.BackColor = Color.White;
+                Runtime.model_scale = i;
+            }
+            else
+                modelscaleTB.BackColor = Color.Red;
         }
     }
 }

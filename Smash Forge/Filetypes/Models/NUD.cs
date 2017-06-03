@@ -72,9 +72,9 @@ namespace Smash_Forge
             for (int mes = mesh.Count - 1; mes >= 0; mes--)
             {
                 Mesh m = mesh[mes];
-                for (int pol = m.polygons.Count - 1; pol >= 0; pol--)
+                for (int pol = m.Nodes.Count - 1; pol >= 0; pol--)
                 {
-                    Polygon p = m.polygons[pol];
+                    Polygon p = (NUD.Polygon)m.Nodes[pol];
                     p.PreRender();
                 }
             }
@@ -196,27 +196,27 @@ namespace Smash_Forge
 
             foreach (Mesh m in mesh)
             {
-                for (int pol = m.polygons.Count - 1; pol >= 0; pol--)
+                for (int pol = m.Nodes.Count - 1; pol >= 0; pol--)
                 {
-                    Polygon p = m.polygons[m.polygons.Count - 1 - pol];
+                    Polygon p = (Polygon)m.Nodes[m.Nodes.Count - 1 - pol];
 
-                    if (p.isTransparent)
+                    //int hash = p.materials[0].textures[0].hash;
+                    if (p.materials[0].srcFactor != 0 || p.materials[0].dstFactor != 0)
                     {
                         trans.Add(p);
                         continue;
                     }
-                    int hash = p.materials[0].textures[0].hash;
-                    if (p.isTransparent)
-                        trans.Add(p);
-                    else
-                        opaque.Add(p);
+                    opaque.Add(p);
+                    //if (p.isTransparent)
+                    //    trans.Add(p);
+                    //else
                 }
             }
 
             //GL.Enable(EnableCap.PrimitiveRestartFixedIndex);
 
             foreach (Polygon p in opaque)
-                if (((Mesh)p.Parent).Checked)
+                if (p.Parent != null && ((Mesh)p.Parent).Checked)
                     DrawPolygon(p, shader);
 
             foreach (Polygon p in trans)
@@ -225,9 +225,9 @@ namespace Smash_Forge
 
             foreach (Mesh m in mesh)
             {
-                for (int pol = m.polygons.Count - 1; pol >= 0; pol--)
+                for (int pol = m.Nodes.Count - 1; pol >= 0; pol--)
                 {
-                    Polygon p = m.polygons[m.polygons.Count - 1 - pol];
+                    Polygon p = (Polygon)m.Nodes[m.Nodes.Count - 1 - pol];
                     if (((Mesh)p.Parent).Checked)
                     {
                         if (Runtime.renderModelSelection && (((Mesh)p.Parent).IsSelected || p.IsSelected))
@@ -526,7 +526,7 @@ namespace Smash_Forge
             shader.enableAttrib();
             foreach(Mesh m in mesh)
             {
-                foreach(Polygon p in m.polygons)
+                foreach(Polygon p in m.Nodes)
                 {
                     GL.BindBuffer(BufferTarget.ArrayBuffer, vbo_position);
                     GL.BufferData<dVertex>(BufferTarget.ArrayBuffer, (IntPtr)(p.vertdata.Length * dVertex.Size), p.vertdata, BufferUsageHint.StaticDraw);
@@ -576,7 +576,7 @@ namespace Smash_Forge
             shader.enableAttrib();
             foreach (Mesh m in mesh)
             {
-                foreach (Polygon p in m.polygons)
+                foreach (Polygon p in m.Nodes)
                 {
                     //if (!p.Checked && !m.Checked) continue;
                     GL.BindBuffer(BufferTarget.ArrayBuffer, vbo_position);
@@ -669,7 +669,7 @@ namespace Smash_Forge
         {
             foreach (Mesh me in mesh)
             {
-                foreach (Polygon p in me.polygons)
+                foreach (Polygon p in me.Nodes)
                 {
                     foreach (Material ma in p.materials)
                     {
@@ -685,7 +685,7 @@ namespace Smash_Forge
             {
                 foreach (Mesh me in mesh)
                 {
-                    foreach(Polygon p in me.polygons)
+                    foreach(Polygon p in me.Nodes)
                     {
                         foreach (Material ma in p.materials)
                         {
@@ -879,7 +879,7 @@ namespace Smash_Forge
 
                     // read vertex
                     Polygon pol = readVertex(d, p, o);
-                    m.polygons.Add(pol);
+                    m.Nodes.Add(pol);
 
                     pol.materials = readMaterial(d, p, nameStart);
 
@@ -1236,7 +1236,7 @@ namespace Smash_Forge
 
             int polyCount = 0; // counting number of poly
             foreach (Mesh m in mesh)
-                polyCount += m.polygons.Count;
+                polyCount += m.Nodes.Count;
 
             for (int i = 0; i < mesh.Count; i++)
             {
@@ -1251,28 +1251,28 @@ namespace Smash_Forge
 
                 d.writeInt(mesh[i].boneflag); // ID
                 d.writeShort(mesh[i].singlebind); // Single Bind 
-                d.writeShort(mesh[i].polygons.Count); // poly count
+                d.writeShort(mesh[i].Nodes.Count); // poly count
                 d.writeInt(obj.size() + 0x30 + mesh.Count * 0x30); // position start for obj
 
                 // write obj info here...
-                for (int k = 0; k < mesh[i].polygons.Count; k++)
+                for (int k = 0; k < mesh[i].Nodes.Count; k++)
                 {
                     obj.writeInt(poly.size());
                     obj.writeInt(vert.size());
-                    obj.writeInt(mesh[i].polygons[k].vertSize >> 4 > 0 ? vertadd.size() : 0);
-                    obj.writeShort(mesh[i].polygons[k].vertices.Count);
-                    obj.writeByte(mesh[i].polygons[k].vertSize); // type of vert
+                    obj.writeInt(((NUD.Polygon)mesh[i].Nodes[k]).vertSize >> 4 > 0 ? vertadd.size() : 0);
+                    obj.writeShort(((NUD.Polygon)mesh[i].Nodes[k]).vertices.Count);
+                    obj.writeByte(((NUD.Polygon)mesh[i].Nodes[k]).vertSize); // type of vert
 
-                    int maxUV = mesh[i].polygons[k].vertices[0].tx.Count; // TODO: multi uv stuff  mesh[i].polygons[k].maxUV() + 
+                    int maxUV = ((NUD.Polygon)mesh[i].Nodes[k]).vertices[0].tx.Count; // TODO: multi uv stuff  mesh[i].polygons[k].maxUV() + 
 
-                    obj.writeByte(mesh[i].polygons[k].UVSize); 
+                    obj.writeByte(((NUD.Polygon)mesh[i].Nodes[k]).UVSize); 
 
                     // MATERIAL SECTION 
 
                     FileOutput te = new FileOutput();
                     te.Endian = Endianness.Big;
 
-                    int[] texoff = writeMaterial(tex, mesh[i].polygons[k].materials, str);
+                    int[] texoff = writeMaterial(tex, ((NUD.Polygon)mesh[i].Nodes[k]).materials, str);
                     //tex.writeOutput(te);
 
                     //obj.writeInt(tex.size() + 0x30 + mesh.Count * 0x30 + polyCount * 0x30); // Tex properties... This is tex offset
@@ -1281,22 +1281,22 @@ namespace Smash_Forge
                     obj.writeInt(texoff[2] > 0 ? texoff[2] + 0x30 + mesh.Count * 0x30 + polyCount * 0x30 : 0);
                     obj.writeInt(texoff[3] > 0 ? texoff[3] + 0x30 + mesh.Count * 0x30 + polyCount * 0x30 : 0);
 
-                    obj.writeShort(mesh[i].polygons[k].faces.Count); // polyamt
-                    obj.writeByte(mesh[i].polygons[k].strip); // polysize 0x04 is strips and 0x40 is easy
+                    obj.writeShort(((NUD.Polygon)mesh[i].Nodes[k]).faces.Count); // polyamt
+                    obj.writeByte(((NUD.Polygon)mesh[i].Nodes[k]).strip); // polysize 0x04 is strips and 0x40 is easy
                     // :D
-                    obj.writeByte(mesh[i].polygons[k].polflag); // polyflag
+                    obj.writeByte(((NUD.Polygon)mesh[i].Nodes[k]).polflag); // polyflag
 
                     obj.writeInt(0); // idk, nothing padding??
                     obj.writeInt(0);
                     obj.writeInt(0);
 
                     // Write the poly...
-                    foreach (int face in mesh[i].polygons[k].faces)
+                    foreach (int face in ((NUD.Polygon)mesh[i].Nodes[k]).faces)
                         poly.writeShort(face);
 
                     // Write the vertex....
 
-                    writeVertex(vert, vertadd, mesh[i].polygons[k]);
+                    writeVertex(vert, vertadd, ((NUD.Polygon)mesh[i].Nodes[k]));
                     vertadd.align(4, 0x0);
                 }
             }
@@ -1594,7 +1594,8 @@ namespace Smash_Forge
                 if (nmesh.ContainsKey(m.Text))
                 {
                     // merge poly
-                    nmesh[m.Text].polygons.AddRange(m.polygons);
+                    foreach(Polygon p in m.Nodes)
+                        nmesh[m.Text].Nodes.Add(p);
                 } else
                 {
                     nmesh.Add(m.Text, m);
@@ -1875,13 +1876,15 @@ namespace Smash_Forge
 
             // for drawing
             public bool isTransparent = false;
-            public dVertex[] vertdata;
+            public dVertex[] vertdata = new dVertex[3];
             public int[] display;
             public int[] selectedVerts;
 
             public Polygon()
             {
                 Checked = true;
+                ImageKey = "polygon";
+                SelectedImageKey = "polygon";
             }
 
             public void AddVertex(Vertex v)
@@ -2097,7 +2100,7 @@ namespace Smash_Forge
         // but you can just use the mesh class without polygons
         public class Mesh : TreeNode
         {
-            public List<Polygon> polygons = new List<Polygon>();
+            //public List<Polygon> polygons = new List<Polygon>();
             public int boneflag = 4; // 0 not rigged 4 rigged 8 singlebind
             public short singlebind = -1;
             
@@ -2106,14 +2109,16 @@ namespace Smash_Forge
             public Mesh()
             {
                 Checked = true;
+                ImageKey = "mesh";
+                SelectedImageKey = "mesh";
             }
 
             public void addVertex(Vertex v)
             {
-                if (polygons.Count == 0)
-                    polygons.Add(new Polygon());
+                if (Nodes.Count == 0)
+                    Nodes.Add(new Polygon());
 
-                polygons[0].AddVertex(v);
+                ((Polygon)Nodes[0]).AddVertex(v);
             }
         }
 
@@ -2136,7 +2141,7 @@ namespace Smash_Forge
                 int fadd = vertBank.Count;
                 nmesh.nodeList = new List<List<int>>();
                 nmesh.faces = new List<List<int>>();
-                foreach (Polygon p in mesh.polygons)
+                foreach (Polygon p in mesh.Nodes)
                 {
                     List<int> nodeList = new List<int>();
                     // vertices
@@ -2190,7 +2195,7 @@ namespace Smash_Forge
             {
                 isSingleBound = true;
                 sbind = -1;
-                foreach (Polygon p in m.polygons)
+                foreach (Polygon p in m.Nodes)
                 {
                     List<Vertex> nVert = new List<Vertex>();
                     List<int> nFace = new List<int>();
@@ -2237,7 +2242,7 @@ namespace Smash_Forge
                 {
                     m.boneflag = 0x08; // single bind flag
                     m.singlebind = (short)sbind; // single bind bone
-                    foreach (Polygon p in m.polygons)
+                    foreach (Polygon p in m.Nodes)
                     {
                         p.polflag = 0;
                         p.vertSize = p.vertSize & 0x0F;
@@ -2253,7 +2258,7 @@ namespace Smash_Forge
         {
             foreach (Mesh m in mesh)
             {
-                foreach (Polygon p in m.polygons)
+                foreach (Polygon p in m.Nodes)
                     computeTangentBitangent(p);
             }
         }
@@ -2276,6 +2281,7 @@ namespace Smash_Forge
                 float z1 = v2.pos.Z - v1.pos.Z;
                 float z2 = v3.pos.Z - v1.pos.Z;
 
+                if (v2.tx.Count < 1) break;
                 float s1 = v2.tx[0].X - v1.tx[0].X;
                 float s2 = v3.tx[0].X - v1.tx[0].X;
                 float t1 = v2.tx[0].Y - v1.tx[0].Y;
@@ -2311,7 +2317,7 @@ namespace Smash_Forge
         {
             List<int> texIds = new List<int>();
             foreach (var m in mesh)
-                foreach (var poly in m.polygons)
+                foreach (Polygon poly in m.Nodes)
                     foreach (var mat in poly.materials)
                         if(!texIds.Contains(mat.displayTexId))
                             texIds.Add(mat.displayTexId);
