@@ -778,6 +778,40 @@ namespace Smash_Forge
             }
         }
 
+        // Outlying hitboxes in terms of damage
+        public List<int> GetSweetspots()
+        {
+            List<int> sweetspots = new List<int>();
+            float avgKBG = 0;
+            float avgBKB = 0;
+            float avgDamage = 0;
+
+            if (gameScriptManager.script == null || gameScriptManager.Hitboxes.Count <= 0)
+                return sweetspots;
+
+            foreach (Hitbox h in gameScriptManager.Hitboxes.Values)
+            {
+                avgKBG += h.KnockbackGrowth;
+                avgBKB += h.KnockbackBase;
+                avgDamage += h.Damage;
+            }
+            avgKBG /= gameScriptManager.Hitboxes.Count;
+            avgBKB /= gameScriptManager.Hitboxes.Count;
+            avgDamage /= gameScriptManager.Hitboxes.Count;
+
+            foreach (KeyValuePair<int, Hitbox> kvp in gameScriptManager.Hitboxes)
+            {
+                // TODO: average is not a good measure for this
+                if (kvp.Value.KnockbackBase >= (avgBKB + avgBKB * 0.1))
+                    sweetspots.Add(kvp.Key);
+                else if (kvp.Value.KnockbackGrowth >= (avgKBG + avgKBG * 0.1))
+                    sweetspots.Add(kvp.Key);
+                else if (kvp.Value.Damage >= (avgDamage + avgDamage * 0.1))
+                    sweetspots.Add(kvp.Key);
+            }
+            return sweetspots;
+        }
+
         private void DrawBones()
         {
             if (Runtime.ModelContainers.Count > 0)
@@ -807,7 +841,10 @@ namespace Smash_Forge
 
                 if (Runtime.renderHitboxes)
                 {
-                    RenderHitboxes();
+                    var sweetspots = GetSweetspots();
+                    sweetspots = new List<int>();  // temp disable sweetspots
+                    RenderHitboxes(sweetspots);
+                    RenderHitboxes(sweetspots, true);
                 }
 
                 if (Runtime.renderHurtboxes)
@@ -1416,7 +1453,7 @@ namespace Smash_Forge
             return b;
         }
 
-        public void RenderHitboxes()
+        public void RenderHitboxes(List<int> sweetspots, bool drawSweetspots = false)
         {
             if (gameScriptManager.script == null || gameScriptManager.Hitboxes.Count <= 0)
                 return;
@@ -1425,6 +1462,11 @@ namespace Smash_Forge
 
             foreach (var pair in gameScriptManager.Hitboxes)
             {
+                if (drawSweetspots && !sweetspots.Contains(pair.Key))
+                    continue;
+                else if (!drawSweetspots && sweetspots.Contains(pair.Key))
+                    continue;
+
                 var h = pair.Value;
                 Bone b = getBone(h.Bone);
                 h.va = Vector3.Transform(new Vector3(h.X, h.Y, h.Z), b.transform.ClearScale());
@@ -1440,7 +1482,9 @@ namespace Smash_Forge
                 switch (h.Type)
                 {
                     case Hitbox.HITBOX:
-                        if (h.Ignore_Throw)
+                        if (drawSweetspots)
+                            GL.Color4(Color.FromArgb(85, Color.Yellow));
+                        else if (h.Ignore_Throw)
                             GL.Color4(Color.FromArgb(85, Color.DarkGreen));
                         else
                             GL.Color4(Color.FromArgb(85, Color.Red));
